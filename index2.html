@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Snake</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image" href="http://assets.stickpng.com/images/58428b65a6515b1e0ad75aaf.png">
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<link rel="preconnect" href="https://fonts.gstatic.com">
+	<link href="https://fonts.googleapis.com/css2?family=Coda&display=swap" rel="stylesheet">
+	<link rel="preconnect" href="https://fonts.gstatic.com">
+	<link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@200&display=swap" rel="stylesheet">
+
+	<style type="text/css">
+		body
+		{
+			background-color: rgba(57, 86, 104 , 0.7);
+			background-image: url("https://i.pinimg.com/originals/68/b3/52/68b35214959edb3e39bc8a1fb80c54bd.png");
+			background-blend-mode: multiply;
+			background-repeat: no-repeat;
+			background-attachment: fixed;
+			background-position: center;
+			background-size: cover;
+			position: relative;
+		}
+		div
+		{
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+		h1, h2, h3, h4, h5, h6, ul{
+			margin: 0;
+			padding: 0;
+		}
+
+		#sideButton{
+			position: fixed;
+			top: 10vh;
+			left: 0;
+
+		}
+		#sideButton-menu{
+			width: 200px;
+		}
+
+		#menu-button:hover{
+			filter: brightness(120%);
+			transition: .3s;
+		}
+		
+		#difficulty-slider:hover{
+			background-color: rgba(212, 218, 234,1);
+		}
+		#difficulty-slider::-webkit-slider-thumb{
+			appearance: none;
+			width: 15px;
+			height: 15px;
+			cursor: pointer;
+			border-radius: 5px;
+			background-color: rgba(70, 94, 157, 1);
+		}
+		#difficulty-slider{
+			appearance: none;
+			background-color: rgba(179, 183, 193 , 1);
+			border-radius: 5px;
+			overflow: hidden;
+		}
+
+		#game-container{
+			display: flex;
+			flex-direction: column;
+			flex-wrap: nowrap;
+		}
+		
+		#game-control{
+			padding: 10px;
+			display: flex;
+			flex-direction: column;
+			flex-wrap: nowrap;
+			justify-content: space-around;
+			align-items: flex-stretch;
+		}
+		#game-button-start{
+			margin-bottom: 5px;
+
+			height: 2rem;
+			width: 5rem;
+			border: none;
+			outline: none;
+			font-size: 1rem;
+		}
+		#game-button-pause{
+			height: 2rem;
+			width: 5rem;
+			border: none;
+			font-size: 1rem;
+		}
+		#game-score-board{
+			display: flex;
+			flex-direction: column;
+			flex-wrap: nowrap;
+			font-size: 1.2rem;
+		}
+		#game-score-time, #game-score-score, #game-score-highscore{
+			margin: 0;
+			width: 100px;
+			font-size: 1.2rem;
+		}
+
+		@media (orientation: landscape) {
+			#game-container{
+				flex-direction: row;
+			}
+			#game-control{
+				flex-direction: column;
+			}
+			#game-score-board{
+				flex-direction: column;
+			}
+		}
+
+		@media (orientation: portrait) {
+			#game-container{
+				flex-direction: column;
+			}
+			#game-control{
+				flex-direction: row;
+			}
+			#game-score-board{
+				flex-direction: row;
+				align-items: center;
+			}
+		}
+
+		#game-screen{
+			width: 800px; /* 40 round 20px*/
+			height: 800px; /* 40 round  20px*/
+			position: relative;
+		}
+		@media (max-width: 1280px), (max-height: 857px) {
+			#game-screen{
+				width: 720px; /* 40 round 18px*/
+				height: 720px; /* 40 round 18px*/
+			}
+		}
+		@media (max-width: 1080px), (max-height: 742px) {
+			#game-screen{
+				width: 640px; /* 40 round 16px*/
+				height: 640px; /* 40 round 16px*/
+			}
+		}
+		@media (max-width: 800px), (max-height: 769px) {
+			#game-screen{
+				width: 560px; /* 40 round 14px*/
+				height: 560px; /* 40 round 14px*/
+			}
+		}
+		@media (max-width: 700px), (max-height: 574px) {
+			#game-screen{
+				width: 400px; /* 40 round 14px*/
+				height: 400px; /* 40 round 14px*/
+			}
+			#game-button-start, #game-button-pause{
+				height: 1rem;
+				width: 3rem;
+				font-size: .5rem;
+			}
+			#game-score-time, #game-score-score, #game-score-highscore{
+				width: 70px;
+				font-size: 1rem;
+			}
+			#game-score-board{
+				font-size: .8rem;
+			}
+		}
+		@media (max-height: 414px) and (orientation: landscape) {
+			#game-screen{
+				width: unset;
+				aspect-ratio: 1 / 1; /* 40 round 14px*/
+				height: 90vh; /* 40 round 14px*/
+			}
+			#game-button-start, #game-button-pause{
+				height: 1rem;
+				width: 3rem;
+				font-size: .5rem;
+			}
+			#game-score-time, #game-score-score, #game-score-highscore{
+				width: 60px;
+				font-size: .8rem;
+			}
+			#game-score-board{
+				font-size: .6rem;
+			}
+		}
+		@media (max-width: 500px) and (orientation: portrait) {
+			#game-screen{
+				height: unset;
+				aspect-ratio: 1 / 1; /* 40 round 14px*/
+				width: 90vw; /* 40 round 14px*/
+			}
+			#game-button-start, #game-button-pause{
+				height: 1rem;
+				width: 3rem;
+				font-size: .5rem;
+			}
+			#game-score-time, #game-score-score, #game-score-highscore{
+				width: 60px;
+				font-size: .8rem;
+			}
+			#game-score-board{
+				font-size: .6rem;
+			}
+		}
+		
+
+		
+
+		/* BG Color */
+		.myBG-1{ /*Gray*/
+			background-color: rgba(106, 124, 135 , 1);
+		}
+		.myBG-2{
+			background-color: rgb(248, 252, 255);;
+		}
+		.myBG-4{ /*Dark*/
+			background-color: rgba(50, 50, 50 , 1);
+		}
+		.myBG-5{ /*Darker*/
+			background-color: rgb(27, 27, 36);
+		}
+		.myBG-6{ /*Blue*/
+			background-color: rgb(94, 94, 119);
+		}
+
+
+		/* Width and Height */
+		.myW-100{
+			width: 100%;
+		}
+
+
+		/* Positions */
+		.myPos-absolute{
+			position: absolute;
+		}
+
+		
+		/* Overflow hidden */
+		.myOverflow-Hidden{
+			overflow: hidden;
+		}
+		
+
+		/* Border Radius */
+		.myBorderRadius-1r{
+			border-radius: 1rem;
+		}
+		.myBorderRadius-5p{
+			border-radius: 5px;
+		}
+		.myBorderRadius-10p{
+			border-radius: 10px;
+		}
+		.myBorderRadius-TRBR-1r{
+			border-radius: 0 1rem 1rem 0;
+		}
+		.myBorderRadius-TRBR-10p{
+			border-radius: 0 10px 10px 0;
+		}
+
+
+		/* Border Outline */
+		.myBorderOutline-All-1-1p{
+			outline: rgb(94, 94, 119) solid 1px;
+		}
+
+
+		/* Flex */
+		.myFlex, .myFA-center, .myFJ-center, .myFJ-between, .myFD-row, .myFD-row-NW, .myFD-col, .myFD-col-NW{
+			display: flex;
+			align-items: flex-start;
+		}
+		.myFA-center{
+			align-items: center;
+		}
+		.myFJ-center{
+			justify-content: center;
+		}
+		.myFJ-between{
+			justify-content: space-between;
+		}
+		.myFD-row{
+			flex-direction: row;
+			flex-wrap: wrap;
+		}
+		.myFD-row-NW{
+			flex-direction: row;
+			flex-wrap: nowrap;
+		}
+		.myFD-col{
+			flex-direction: column;
+			flex-wrap: wrap;
+		}
+		.myFD-col-NW{
+			flex-direction: column;
+			flex-wrap: nowrap;
+		}
+		
+
+		/* Margin and Padding */
+		.myM-0{
+			margin: 0;
+		}
+		.myMx-1{
+			margin-left: 5px;
+			margin-right: 5px;
+		}
+		.myP-0{
+			padding: 0;
+		}
+		.myP-1{
+			padding: 5px;
+		}
+		.myP-2, .myP-sm-2{
+			padding: 10px;
+		}
+		@media (max-width: 500px) {
+			.myP-sm-2{
+				padding: 5px;
+			}
+		}
+		.myPx-1{
+			padding-left: 5px;
+			padding-right: 5px;
+		}
+		.myPx-2{
+			padding-left: 10px;
+			padding-right: 10px;
+		}
+		.myPy-1{
+			padding-top: 5px;
+			padding-bottom: 5px;
+		}
+		.myPy-2{
+			padding-top: 10px;
+			padding-bottom: 10px;
+		}
+
+		/* Font Color*/
+		.myFC-2{
+			color: rgb(248, 252, 255);
+		}
+		.myFC-3{
+			color: rgba(202, 255, 238, 1);
+		}
+
+
+		/* Font Family*/
+		.myFont-Coda{
+			font-family: 'Coda', cursive;
+		}
+		.myFont-Inconsolata{
+			font-family: 'Inconsolata', monospace;
+		}
+
+
+		/* Font Size*/
+		.myFontSize-0_8{
+			font-size: 0.8rem;
+		}
+		.myFontSize-1{
+			font-size: 1rem;
+		}
+		.myFontSize-1_2{
+			font-size: 1.2rem;
+		}
+		.myFonxSize-1-0{
+			font-size: 1rem;
+		}
+
+
+		/* Text Weight */
+		.myFontWeight-lighter{
+			font-weight: lighter;
+		}
+
+
+		/* Text Alignment*/
+		.myTextAlign-center{
+			text-align: center;
+		}
+		.myTextAlign-end{
+			text-align: right;
+		}
+
+
+		/* Text Orientation */
+		.myTextDirect-vertical{
+			writing-mode: vertical-rl;
+		}
+		.myTextOrient-upright{
+			text-orientation: upright;
+		}
+
+		
+		/* Cursor*/
+		.myCursor-pointer{
+			cursor: pointer;
+		}
+		
+	</style>
+</head>
+<body>
+	<section id="game" class="mW-100 myFJ-center myFont-Coda ">
+		<div id="game-container" class="myOverflow-Hidden myBorderRadius-5p myBorderOutline-All-1-1p">
+			<!-- Screen of the game-->
+			<div id="game-screen" class="myBG-4">
+				<div class="myPos-absolute myBG-2" id="snake" style="left: 620px; bottom: 0px; width: 20px; height: 20px;"></div>
+			</div>
+			<!-- The Main Controls of the game-->
+			<div id="game-control" class="myBG-5">
+				<!-- pause and play-->
+				<div class="myBG-1 myFD-col-NW myP-sm-2 myBorderRadius-10p myFA-center myFJ-center">
+					<button id="game-button-start" type="button" class="myBG-4 myFC-2 myBorderRadius-5p myCursor-pointer" >START</button>
+					<button id="game-button-pause" type="button" class="myBG-4 myFC-2 myBorderRadius-5p myCursor-pointer" >PAUSE</button>
+				</div>
+				<!-- Score-->
+				<div id="game-score-board" class="myBG-1 myFD-col-NW myP-1 myBorderRadius-10p myFC-2">
+					<!-- Time -->
+					<div class="myW-100 myPx-1 myFD-col-NW myFA-center">
+						<div class="myTextAlign-center myW-100"> TIME </div>
+						<div id="game-score-time" class="myBG-4 myTextAlign-end myFont-Inconsolata">
+							0000000
+						</div>
+					</div>
+					<!-- Current Score-->
+					<div class="myW-100 myPx-1 myFD-col-NW myFA-center">
+						<div class="myTextAlign-center myW-100"> SCORE </div>
+						<div id="game-score-score" class="myBG-4 myTextAlign-end myFont-Inconsolata">
+							0000000
+						</div>
+					</div>
+					<!-- High Score-->
+					<div class="myW-100 myPx-1 myFD-col-NW myFA-center">
+						<div class="myTextAlign-center myW-100"> HIGHSCORE </div>
+						<div id="game-score-highscore" class="myBG-4 myTextAlign-end myFont-Inconsolata">
+							0000000
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Side Button-->
+	<aside id="sideButton" class="myFD-row-NW myFA-center myFont-Coda myFC-2">
+		<!-- Main Menu-->
+		<div id="sideButton-menu" class="myBG-1 myBorderRadius-TRBR-1r" style="padding: 10px 0 5px 0;">
+			<ul class= myFontWeight-lighter" style="list-style-type: none; padding-left: 10px;">
+				<li>W - Up</li>
+				<li>S - Down</li>
+				<li>A - Left</li>
+				<li>D - Right</li>
+				<li>Space(Hold) - 2x Speed</li>
+				<li>____</li>
+				<li>On mobile devices, Swipe the screen</li>
+				<li>____</li>
+			</ul>
+			<h2 class="myTextAlign-center myFontSize-1 myFC-3 myFontWeight-lighter" style="padding-top: 10px;">CHOOSE DIFFICULTY</h2>
+			<div class="" style="padding: 0 5px 0 5px">
+				<input id="difficulty-slider" class="myW-100 myM-0" type="range" min="1" max="7" value="5">
+				<div id="difficulty-range" style="padding: 0 5px 0 5px" class="myW-100 myFJ-between">
+					<y>1</y><y>2</y><y>3</y><y>4</y><y>5</y><y>6</y><y>7</y>
+				</div>
+				<div id="difficulty-message" class="myFontSize-0_8">*click 'start' to restart the game with choosen difficulty.</div>
+			</div>
+		</div>
+		<!-- Main Menu Collapser-->
+		<div id="menu-button" class="myBG-1 myTextDirect-vertical myCursor-pointer myPy-1 myBorderRadius-TRBR-10p myFC-3 myTextOrient-upright" > CONTROLS </div>
+	</aside>
+
+	<script type="text/javascript">
+		class Screen{
+			constructor(pixel = [40, 40], size = [800, 800]){ //width height //x y
+				this.pixel = pixel;
+				this.size = size;
+				this.pixelMap = {};
+				this.preciseSize = [(size[0]/pixel[0]), (size[1]/pixel[1])];
+			}
+			helper_setAttribute(node, attributes){
+				
+				for(const i in attributes){
+					node.setAttribute(''+i, attributes[i]);
+				}
+				return node;
+			}
+
+			changeSize(size){
+				this.size = size;
+				this.preciseSize = [(size[0]/this.pixel[0]), (size[1]/this.pixel[1])];
+			}
+			changePixel(pixel){// This will reset the pixel map
+				this.pixel = pixel;
+				this.pixelMap = {};
+				this.preciseSize = [(this.size[0]/pixel[0]), (this.size[1]/pixel[1])];
+			}
+
+			
+
+			addPixel(idName='', location = [0,0]){ 
+				this.pixelMap[location[0]] = {[location[1]]: ''};
+
+				let newNode = document.createElement('div');
+				let height = 'height: '+this.preciseSize[0]+'px; ';
+				let width = 'width: '+this.preciseSize[1]+'px; ';
+				let x = 'left: '+(this.pixel[0]*location[0])+'px; ';
+				let y = 'top: '+(this.pixel[1]*location[1])+'px; ';
+				
+				newNode = this.helper_setAttribute(newNode, {'id':idName, 'class':'myPos-absolute myBG-2', 'style':height+width+x+y });
+				document.getElementById("game-screen").appendChild(newNode);
+			}
+			removePixel(idName='', location = [0,0]){
+
+			}
+			drawPixel(from = [0,0], to = [0, 0]){
+
+			}
+			floodPixel(from = [0,0], to = [0,0]){
+
+			}
+			removeDrawPixel(from = [0,0], to = [0,0]){
+
+			}
+			removeFloodPixel(from = [0,0], to = [0,0]){
+
+			}
+			clearCurrentScreen(){
+
+			}
+			saveCurrentScreen(){
+
+			}
+			loadCurrentScreen(){
+
+			}
+
+		}
+	let snakeGame = new Screen();
+	snakeGame.addPixel('snake', [4,1]);
+	</script>
+</body>
+</html>
