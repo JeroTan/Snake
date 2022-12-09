@@ -495,6 +495,9 @@
 				this.occupiedSpace = 0;
 				this.framerate = 30;
 				this.$ID = $D('#'+this.screenID);
+				this.runScreen = setInterval(()=>{
+					this.updateScreen();
+				}, Math.floor(1000/framerate) )
 			}
 
 			/*||| Preferably use within the class only |||*/
@@ -766,6 +769,60 @@
 	//snakeGame.drawPixel([0,39], [39,0], true);
 	snakeGame.updateScreen();
 	console.log(snakeGame.getOccupiedSpaceList());
+	let exampletime = 0;
+	
+	////// RESPONSIVE SCREEN UPDATER
+	
+
+
+	////// KEY MAPPING
+	class KeyBind{
+		constructor(useKey = ['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft', 'KeyW', 'KeyD', 'KeyS', 'KeyA', 'Space'], gameLink = (activeKeys)=>{}){
+			this.currentActive = '';
+			this.keyStackOrder = [];
+			this.useKey = useKey;
+			this.gameLink = gameLink;
+		}
+
+		tapPress(event){
+			for(const i in this.keyStackOrder){
+				if(this.keyStackOrder[i] == event.code){
+					return false;
+				}
+			}
+			for(const i in this.useKey){
+				if(this.useKey[i] == event.code){
+					this.keyStackOrder.push(this.useKey[i]);
+					return true;
+				}
+			}
+			this.gameLink();
+		}
+
+		outPress(event){
+			console.log(this.keyStackOrder);
+			for(const i in this.keyStackOrder){
+				if(this.keyStackOrder[i] == event.code){
+					delete this.keyStackOrder[i];
+					this.keyStackOrder = this.keyStackOrder.filter(n => n != null);
+					break;
+				}
+			}
+			console.log(this.keyStackOrder);
+			this.gameLink();
+		}
+
+		runBinding(){
+			window.addEventListener('keydown', (event)=> this.tapPress(event));
+			window.addEventListener('keyup', (event)=> this.outPress(event));
+		}
+
+
+	}
+	let snakeKeyBind = new KeyBind();
+	snakeKeyBind.runBinding();
+
+	////// SNAKE ENGINE
 	</script>
 </body>
 </html>
