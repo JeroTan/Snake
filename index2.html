@@ -222,7 +222,7 @@
 			background-color: rgba(106, 124, 135 , 1);
 		}
 		.myBG-2{
-			background-color: rgb(248, 252, 255);;
+			background-color: rgb(248, 252, 255);
 		}
 		.myBG-4{ /*Dark*/
 			background-color: rgba(50, 50, 50 , 1);
@@ -417,7 +417,7 @@
 		<div id="game-container" class="myOverflow-Hidden myBorderRadius-5p myBorderOutline-All-1-1p">
 			<!-- Screen of the game-->
 			<div id="game-screen" class="myBG-4">
-				<div class="myPos-absolute myBG-2" id="snake" style="left: 620px; bottom: 0px; width: 20px; height: 20px;"></div>
+				<!-- <div class="myPos-absolute myBG-2" id="snake" style="left: 620px; bottom: 0px; width: 20px; height: 20px;"></div> -->
 			</div>
 			<!-- The Main Controls of the game-->
 			<div id="game-control" class="myBG-5">
@@ -482,13 +482,19 @@
 	</aside>
 
 	<script type="text/javascript">
+		let $D = (x) => document.querySelector(x);
 		class Screen{
-			constructor(pixel = [40, 40], size = [800, 800]){ //width height //x y
+			constructor(screenID, pixel = [40, 40], size = [800, 800]){ //width height //x y //pixel size minus 1
+				this.screenID = screenID;
 				this.pixel = pixel;
 				this.size = size;
 				this.pixelMap = {};
+				this.pixelMapMemory = {};
 				this.preciseSize = [(size[0]/pixel[0]), (size[1]/pixel[1])];
+				this.availableSpace = pixel[0]*pixel[1];
+				this.occupiedSpace = 0;
 			}
+
 			helper_setAttribute(node, attributes){
 				
 				for(const i in attributes){
@@ -503,52 +509,213 @@
 			}
 			changePixel(pixel){// This will reset the pixel map
 				this.pixel = pixel;
-				this.pixelMap = {};
+				//this.pixelMap = {};
 				this.preciseSize = [(this.size[0]/pixel[0]), (this.size[1]/pixel[1])];
 			}
-
 			
-
-			addPixel(idName='', location = [0,0]){
-				this.pixelMap[location[0]] = {[location[1]]: ''};
-
+			checkPixelMap(id='', location=''){
+				if(id){
+					if(location){
+						if( this.pixelMap.hasOwnProperty( [location[0]] ) && this.pixelMap[location[0]].hasOwnProperty( location[1] ) && this.pixelMap[location[0]][location[1]].id == id){
+							return true;
+						}
+					}
+					else{
+						for(const i in this.pixelMap){
+							for(const j in this.pixelMap[i]){
+								let contents = this.pixelMap[i][j];
+								if(contents.id == id){
+									return true;
+								}
+							}
+						}
+					}
+				}
+				else if(location){
+					if( this.pixelMap.hasOwnProperty( [location[0]] ) && this.pixelMap[location[0]].hasOwnProperty( location[1] ) ){
+						return true;
+					}
+				}
+				return false;
+			}
+			getOccupiedSpaceList(){
+				//let tempRawList = Object.getOwnPropertyNames(this.pixelMap);
+				let listProperty = {};
+				let index = 0;
+				for(const i in this.pixelMap){
+					for(const j in this.pixelMap[i]){
+						listProperty[index++] = [i, j];
+					}
+				}
+				return listProperty;
+			}
+			getAvailableSpaceList(){
+				let listProperty = {};
+				let index = 0;
+				for(let i = 0; i < this.pixel[0]; i++){
+					for(let j = 0; j < this.pixel[1]; j++){
+						if( this.pixelMap.hasOwnProperty( i ) && this.pixelMap[ i ].hasOwnProperty( j ) ){
+							continue;
+						}
+						else{
+							listProperty[index++] = [i, j];
+						}
+					}
+				}
+				return listProperty;
+			}
+			/////// This will add one pixel in the screen// also maps in the screen mapper and update if there is already one pixel in the certain area
+			addPixel(idName='', location = [0,0], color = 'rgb(248, 252, 255)'){
+				//Create Pixel Attributes
 				let newNode = document.createElement('div');
 				let height = 'height: '+this.preciseSize[0]+'px; ';
 				let width = 'width: '+this.preciseSize[1]+'px; ';
-				let x = 'left: '+(this.pixel[0]*location[0])+'px; ';
-				let y = 'top: '+(this.pixel[1]*location[1])+'px; ';
+				let x = 'left: '+(this.preciseSize[0]*location[0])+'px; ';
+				let y = 'top: '+(this.preciseSize[1]*location[1])+'px; ';
+				let cssColor = 'background-color: '+color+'; ';
+
+				// Add to internal Mapping
+				if(this.pixelMap.hasOwnProperty( location[0] ) && this.pixelMap[location[0]].hasOwnProperty( location[1] )){
+					this.removePixel('', location);
+				}
+				if(this.pixelMap.hasOwnProperty( location[0] )){
+					this.pixelMap[location[0]][location[1]] = {'id':idName?idName:location[0]+'_'+location[1], 'class':'myPos-absolute myBG-2 '+('l-'+location[0]+'_'+location[1]), 'color':color};
+
+				}else{
+					this.pixelMap[location[0]] = {[location[1]]: {'id':idName?idName:location[0]+'_'+location[1], 'class':'myPos-absolute myBG-2 '+('l-'+location[0]+'_'+location[1]), 'color':color}};
+				}
 				
-				newNode = this.helper_setAttribute(newNode, {'id':idName, 'class':'myPos-absolute myBG-2', 'style':height+width+x+y });
-				document.getElementById("game-screen").appendChild(newNode);
+
+				//Fetch Space
+				--this.availableSpace;
+				++this.occupiedSpace;
+
+				//Insert it to the DOM screen				
+				newNode = this.helper_setAttribute(newNode, {'id':idName?idName:location[0]+'_'+location[1], 'class':'myPos-absolute myBG-2 '+('l-'+location[0]+'_'+location[1]), 'style':height+width+x+y+cssColor});
+				$D('#'+this.screenID).appendChild(newNode);
 			}
 			removePixel(idName='', location = [0,0]){
-
+				let altPixelMap = this.pixelMap;
+				if(idName){
+					for(const i in this.pixelMap){
+						for(const j in this.pixelMap[i]){
+							if(this.pixelMap[i][j].id == idName){
+								deleteMap(i, j);
+								$D('#'+this.screenID).removeChild($D('#'+idName));
+								--this.occupiedSpace;
+								++this.availableSpace;
+								break;
+							}
+						}
+					}
+				}else{
+					if( this.pixelMap.hasOwnProperty( location[0] ) && this.pixelMap[ location[0] ].hasOwnProperty( location[1] ) ){
+						--this.occupiedSpace;
+						++this.availableSpace;
+						$D('#'+this.screenID).removeChild( $D('.'+('l-'+location[0]+'_'+location[1])) );
+						deleteMap(location[0], location[1]);
+					}
+				}
+				// Delete File
+				function deleteMap(x, y){
+					delete altPixelMap[x][y];
+					if( (Object.getOwnPropertyNames(altPixelMap[x])).length <= 0 ){
+						delete altPixelMap[x];
+					}
+				}
 			}
-			drawPixel(from = [0,0], to = [0, 0]){
-
+			drawPixel(from = [0,0], to = [0,0], reverseDraw = false, color = 'rgb(248, 252, 255)'){
+				let lengthX = to[0] - from[0] //Final minus Initial of X //100 - 0 = 100 || 0 - 100 = -100
+				let lengthY = to[1] - from[1] //Final minus Initial of Y
+				let directionX = lengthX>0?'DOWN':'UP';
+				let directionY = lengthY>0?'RIGHT':'LEFT';
+				lengthX = Math.abs(lengthX);
+				lengthY = Math.abs(lengthY);
+				if(lengthX >= lengthY){
+					let ratio = lengthX / lengthY;
+					for(let i = 0; i <= lengthX; i++){
+						let xForward = directionX=='DOWN'?from[0]+i:from[0]-i;
+						let yForward = directionY=='RIGHT'?from[1]+Math.floor(i/ratio):from[1]-Math.floor(i/ratio);
+						if(!reverseDraw){
+							this.addPixel('', [xForward, yForward]);
+						}
+						else{
+							this.removePixel('', [xForward, yForward]);
+						}
+						
+					}
+				}else{
+					let ratio = lengthY / lengthX;
+					for(let i = 0; i <= lengthY; i++){
+						let xForward = directionX=='DOWN'?from[0]+Math.floor(i/ratio):from[0]-Math.floor(i/ratio);
+						let yForward = directionY=='RIGHT'?from[1]+i:from[1]-i;
+						if(!reverseDraw){
+							this.addPixel('', [xForward, yForward], color);
+						}
+						else{
+							this.removePixel('', [xForward, yForward]);
+						}
+						
+					}
+				}
 			}
-			floodPixel(from = [0,0], to = [0,0]){
+			floodPixel(from = [0,0], to = [0,0], reverseFlood=false, color = 'rgb(248, 252, 255)'){
+				let lengthX = to[0] - from[0] //Final minus Initial of X //100 - 0 = 100 || 0 - 100 = -100
+				let lengthY = to[1] - from[1] //Final minus Initial of Y
+				let directionX = lengthX>0?'DOWN':'UP';
+				let directionY = lengthY>0?'RIGHT':'LEFT';
+				lengthX = Math.abs(lengthX);
+				lengthY = Math.abs(lengthY);
 
+				for(let i = 0; i <= lengthX; i++){
+					let xForward = directionX=='DOWN'?from[0]+i:from[0]-i;
+					for(let j = 0; j <= lengthY; j++){
+						let yForward = directionY=='RIGHT'?from[1]+j:from[1]-j;
+						if(!reverseFlood){
+							this.addPixel('', [xForward, yForward], color);
+						}
+						else{
+							this.removePixel('', [xForward, yForward]);
+						}
+					}
+				}
 			}
-			removeDrawPixel(from = [0,0], to = [0,0]){
 
-			}
-			removeFloodPixel(from = [0,0], to = [0,0]){
-
-			}
 			clearCurrentScreen(){
-
+				this.floodPixel([0,39], [39, 0], true);
 			}
+
 			saveCurrentScreen(){
-
+				this.pixelMapMemory = structuredClone(this.pixelMap);
 			}
+			
 			loadCurrentScreen(){
-
+				for(const i in this.pixelMapMemory){
+					for(const j in this.pixelMapMemory[i]){
+						let contents = this.pixelMapMemory[i][j];
+						this.addPixel(contents.id, [i, j], contents.color);
+					}
+				}
 			}
-
+			
 		}
-	let snakeGame = new Screen();
+	let snakeGame = new Screen('game-screen');
 	snakeGame.addPixel('snake', [4,1]);
+	snakeGame.addPixel('', [39,39]);
+	snakeGame.addPixel('', [29,34]);
+	//console.log(snakeGame.pixelMap);
+	//console.log(snakeGame.getOccupiedSpaceList());
+	//console.log(snakeGame.getAvailableSpaceList());
+	snakeGame.removePixel('', [4, 1])
+	//console.log(snakeGame.pixelMap);
+	snakeGame.drawPixel([0,39], [39,0]);
+	console.log(snakeGame.getOccupiedSpaceList());
+	snakeGame.floodPixel([0,20], [39,20], false, 'rgb(250, 250, 0)');
+	snakeGame.saveCurrentScreen();
+	snakeGame.clearCurrentScreen();
+	snakeGame.loadCurrentScreen();
+	//snakeGame.drawPixel([0,39], [39,0], true);
+	console.log(snakeGame.getOccupiedSpaceList());
 	</script>
 </body>
 </html>
