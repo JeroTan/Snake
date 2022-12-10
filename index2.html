@@ -234,6 +234,11 @@
 			background-color: rgb(94, 94, 119);
 		}
 
+		/* My Opacity */
+		.myOpa-0{
+			opacity: 0;
+		}
+
 
 		/* Width and Height */
 		.myW-100{
@@ -488,8 +493,10 @@
 				this.screenID = screenID;
 				this.pixel = pixel;
 				this.size = size;
-				this.pixelMap = [{}];
-				this.pixelMapMemory = {};
+				this.pixelMap = {};
+				this.pixelMapMemory = [{}];
+				this.clickMap = {};
+				this.clickMapMemory = {};
 				this.preciseSize = [(size[0]/pixel[0]), (size[1]/pixel[1])];
 				this.availableSpace = pixel[0]*pixel[1];
 				this.occupiedSpace = 0;
@@ -498,6 +505,9 @@
 				this.runScreen = setInterval(()=>{
 					this.updateScreen();
 				}, Math.floor(1000/framerate) )
+				this.windowResizer = window.addEventListener('resize', ()=>{
+					this.changeSize([this.$ID.clientWidth, this.$ID.clientHeight]);
+				})
 			}
 
 			/*||| Preferably use within the class only |||*/
@@ -519,6 +529,9 @@
 			changePixel(pixel){// This will reset the current screen and pixel mapping
 				this.pixel = pixel;
 				this.pixelMap = {};
+				this.pixelMapMemory = [{}];
+				this.clickMap = {};
+				this.clickMapMemory = {}
 				this.preciseSize = [(this.size[0]/pixel[0]), (this.size[1]/pixel[1])];
 				this.updateScreen();
 			}
@@ -582,14 +595,6 @@
 
 			/////// This will add one pixel in the screen// also maps in the screen mapper and update if there is already one pixel in the certain area
 			addPixel(idName='', location = [0,0], color = 'rgb(248, 252, 255)'){
-				//Create Pixel Attributes
-				let newNode = document.createElement('div');
-				let height = 'height: '+this.preciseSize[0]+'px; ';
-				let width = 'width: '+this.preciseSize[1]+'px; ';
-				let x = 'left: '+(this.preciseSize[0]*location[0])+'px; ';
-				let y = 'top: '+(this.preciseSize[1]*location[1])+'px; ';
-				let cssColor = 'background-color: '+color+'; ';
-
 				// Add to internal Mapping
 				if(this.pixelMap.hasOwnProperty( location[0] ) && this.pixelMap[location[0]].hasOwnProperty( location[1] )){
 					this.removePixel('', location);
@@ -640,15 +645,15 @@
 			drawPixel(from = [0,0], to = [0,0], reverseDraw = false, color = 'rgb(248, 252, 255)'){
 				let lengthX = to[0] - from[0] //Final minus Initial of X //100 - 0 = 100 || 0 - 100 = -100
 				let lengthY = to[1] - from[1] //Final minus Initial of Y
-				let directionX = lengthX>0?'DOWN':'UP';
-				let directionY = lengthY>0?'RIGHT':'LEFT';
+				let directionX = lengthX>0?'RIGHT':'LEFT';
+				let directionY = lengthY>0?'DOWN':'UP';
 				lengthX = Math.abs(lengthX);
 				lengthY = Math.abs(lengthY);
 				if(lengthX >= lengthY){
 					let ratio = lengthX / lengthY;
 					for(let i = 0; i <= lengthX; i++){
-						let xForward = directionX=='DOWN'?from[0]+i:from[0]-i;
-						let yForward = directionY=='RIGHT'?from[1]+Math.floor(i/ratio):from[1]-Math.floor(i/ratio);
+						let xForward = directionX=='RIGHT'?from[0]+i:from[0]-i;
+						let yForward = directionY=='DOWN'?from[1]+Math.floor(i/ratio):from[1]-Math.floor(i/ratio);
 						if(!reverseDraw){
 							this.addPixel('', [xForward, yForward]);
 						}
@@ -660,8 +665,8 @@
 				}else{
 					let ratio = lengthY / lengthX;
 					for(let i = 0; i <= lengthY; i++){
-						let xForward = directionX=='DOWN'?from[0]+Math.floor(i/ratio):from[0]-Math.floor(i/ratio);
-						let yForward = directionY=='RIGHT'?from[1]+i:from[1]-i;
+						let xForward = directionX=='RIGHT'?from[0]+Math.floor(i/ratio):from[0]-Math.floor(i/ratio);
+						let yForward = directionY=='DOWN'?from[1]+i:from[1]-i;
 						if(!reverseDraw){
 							this.addPixel('', [xForward, yForward], color);
 						}
@@ -677,15 +682,15 @@
 			floodPixel(from = [0,0], to = [0,0], reverseFlood=false, color = 'rgb(248, 252, 255)'){
 				let lengthX = to[0] - from[0] //Final minus Initial of X //100 - 0 = 100 || 0 - 100 = -100
 				let lengthY = to[1] - from[1] //Final minus Initial of Y
-				let directionX = lengthX>0?'DOWN':'UP';
-				let directionY = lengthY>0?'RIGHT':'LEFT';
+				let directionX = lengthX>0?'RIGHT':'LEFT';
+				let directionY = lengthY>0?'DOWN':'UP';
 				lengthX = Math.abs(lengthX);
 				lengthY = Math.abs(lengthY);
 
 				for(let i = 0; i <= lengthX; i++){
-					let xForward = directionX=='DOWN'?from[0]+i:from[0]-i;
+					let xForward = directionX=='RIGHT'?from[0]+i:from[0]-i;
 					for(let j = 0; j <= lengthY; j++){
-						let yForward = directionY=='RIGHT'?from[1]+j:from[1]-j;
+						let yForward = directionY=='DOWN'?from[1]+j:from[1]-j;
 						if(!reverseFlood){
 							this.addPixel('', [xForward, yForward], color);
 						}
@@ -734,7 +739,12 @@
 					}
 				}else{
 					if( this.pixelMap.hasOwnProperty( location[0] ) && this.pixelMap[ location[0] ].hasOwnProperty( location[1] ) ){
-						this.$ID.removeChild( $D('.'+('l-'+location[0]+'_'+location[1])) );
+						try{
+							this.$ID.removeChild( $D('.'+('l-'+location[0]+'_'+location[1])) );
+						}
+						catch{
+							
+						}
 					}
 				}
 			}
@@ -749,39 +759,129 @@
 				}
 			}
 			
-			clearScreen(){
-				this.$ID.textContent = '';
+			clearScreen(allClear = false, pixel = true, click = false){
+				if(allClear){
+					this.$ID.textContent = '';
+				}
+				else{
+					if(pixel){
+						for(const i in this.pixelMap){
+							for(const j in this.pixelMap[i]){
+								this.removeToScreen('', [i, j]);
+							}
+						}
+					}
+					if(click){
+						for(const i in this.clickMap){
+							this.removeClickScreen(this.clickMap[i]['id']);
+						}
+					}
+					
+				}
+				
 			}
 			
+			addClickZone(idName='', handler = 'onclick', bind = 'alert(\'HERE!\')', cursor='pointer', from = [0,0], to = [1,1]){
+				// Add to internal Mapping
+				if(!this.clickMap.hasOwnProperty( idName )){
+					cursor = 'cursor: '+cursor+'; ';
+					this.clickMap[idName] = {'id':idName?idName:'cz-'+from[0]+'_'+from[1], 'style':cursor, 'handler':handler, 'bind':bind, 'location':[from, to]};
+					
+				}
+			}
+			removeClickZone(idName=''){
+				if(this.clickMap.hasOwnProperty( idName )){
+					delete this.clickMap[idName];
+				}
+			}
+
+			addClickScreen(idName='',  handler= '', bind='', additionalStyle='', from=[0,0], to=[1,1]){
+				//Plot location
+				let lengthX = to[0] - from[0] //Final minus Initial of X //100 - 0 = 100 || 0 - 100 = -100
+				let lengthY = to[1] - from[1] //Final minus Initial of Y
+				let directionX = lengthX>0?'RIGHT':'LEFT';
+				let directionY = lengthY>0?'DOWN':'UP';
+				lengthX = Math.abs(lengthX);
+				lengthY = Math.abs(lengthY);
+
+				//Create Pixel Attributes
+				let newNode = document.createElement('div');
+				let height = 'height: '+(this.preciseSize[0] * lengthX)+'px; ';
+				let width = 'width: '+(this.preciseSize[1] * lengthY)+'px; ';
+				let x = 'left: '+(directionX=='RIGHT'?this.preciseSize[0]*from[0]:this.preciseSize[0]*to[0])+'px; ';
+				let y = 'top: '+(directionY=='DOWN'?this.preciseSize[0]*from[1]:this.preciseSize[0]*to[1])+'px; ';
+
+				//Insert it to the DOM screen				
+				newNode = this.helper_setAttribute(newNode, {'id':idName, 'class':'myOpa-0 '+('cz-'+from[0]+'_'+from[1]), 'style':height+width+x+y+additionalStyle, [handler]:bind});
+				this.$ID.prepend(newNode);
+			}
+
+			removeClickScreen(idName= ''){
+				for(const i in this.clickMap){
+					if(this.clickMap[i]['id'] == idName){
+						this.$ID.removeChild($D('#'+idName));
+						break;
+					}
+				}
+			}
+
+			updateClickScreen(){
+				for(const i in this.clickMap){
+					this.addClickScreen(this.clickMap[i]['id'], this.clickMap[i]['handler'], this.clickMap[i]['bind'], this.clickMap[i]['style'], this.clickMap[i]['location'][0], this.clickMap[i]['location'][1]);
+				}
+			}
+
+			clearClickScreen(){
+
+			}
 		}
-	let snakeGame = new Screen('game-screen');
-	snakeGame.addPixel('snake', [4,1]);
-	snakeGame.addPixel('', [39,39]);
-	snakeGame.addPixel('', [29,34]);
-	//console.log(snakeGame.pixelMap);
-	//console.log(snakeGame.getOccupiedSpaceList());
-	//console.log(snakeGame.getAvailableSpaceList());
-	snakeGame.removePixel('', [4, 1])
-	//console.log(snakeGame.pixelMap);
-	snakeGame.drawPixel([0,39], [39,0]);
-	console.log(snakeGame.getOccupiedSpaceList());
-	snakeGame.floodPixel([0,20], [39,20], false, 'rgb(250, 250, 0)');
-	//snakeGame.drawPixel([0,39], [39,0], true);
-	snakeGame.updateScreen();
-	console.log(snakeGame.getOccupiedSpaceList());
+	let snakeScreen = new Screen('game-screen');
+	snakeScreen.addPixel('snake', [4,1]);
+	snakeScreen.addPixel('', [39,39]);
+	snakeScreen.addPixel('', [29,34]);
+	//console.log(snakeScreen.pixelMap);
+	//console.log(snakeScreen.getOccupiedSpaceList());
+	//console.log(snakeScreen.getAvailableSpaceList());
+	snakeScreen.removePixel('', [4, 1])
+	//console.log(snakeScreen.pixelMap);
+	snakeScreen.drawPixel([0,39], [39,0]);
+	console.log(snakeScreen.getOccupiedSpaceList());
+	snakeScreen.floodPixel([0,20], [39,20], false, 'rgb(250, 250, 0)');
+	//snakeScreen.drawPixel([0,39], [39,0], true);
+	snakeScreen.updateScreen();
+	snakeScreen.addClickZone('HELLOWORLD', 'onclick', 'alert(\'HERE!\')', 'pointer', [0,0], [10,10]);
+	snakeScreen.updateClickScreen();
+	console.log(snakeScreen.getOccupiedSpaceList());
 	let exampletime = 0;
-	
-	////// RESPONSIVE SCREEN UPDATER
-	
 
 
 	////// KEY MAPPING
 	class KeyBind{
-		constructor(useKey = ['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft', 'KeyW', 'KeyD', 'KeyS', 'KeyA', 'Space'], gameLink = (activeKeys)=>{}){
+		/*For touchKey
+			- Swipe = 8, 4, Y, X, No Limit
+			- Drag
+			- Tap
+			- UnTap
+		*/
+		constructor(useKey = ['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft', 'KeyW', 'KeyD', 'KeyS', 'KeyA', 'Space'], touchKey = {'Swipe':'4'}, gameLink = (activeKeys)=>{}){
 			this.currentActive = '';
 			this.keyStackOrder = [];
 			this.useKey = useKey;
+			this.touchKey = touchKey;
 			this.gameLink = gameLink;
+		}
+
+		insertGameLink(callback){
+			this.gameLink = callback;
+		}
+
+		helper_insertStack(keys){
+			if( this.keyStackOrder.includes(keys) ){
+				delete this.keyStackOrder[ this.keyStackOrder.indexOf(keys) ];
+				this.keyStackOrder = this.keyStackOrder.filter(n => n != null);
+			}
+			this.keyStackOrder.push(keys);
+			return this.keyStackOrder;
 		}
 
 		tapPress(event){
@@ -800,7 +900,6 @@
 		}
 
 		outPress(event){
-			console.log(this.keyStackOrder);
 			for(const i in this.keyStackOrder){
 				if(this.keyStackOrder[i] == event.code){
 					delete this.keyStackOrder[i];
@@ -808,13 +907,76 @@
 					break;
 				}
 			}
-			console.log(this.keyStackOrder);
 			this.gameLink();
 		}
 
+		touchTap(event){
+			let touchDescription =  event.changedTouches[0];
+			this.touchStart = [touchDescription.screenX, touchDescription.screenY];
+		}
+		touchGone(event){
+			let touchDescription =  event.changedTouches[0];
+			this.touchEnd = [touchDescription.screenX, touchDescription.screenY];
+
+			this.calculateTouch();
+		}
+		calculateTouch(){
+			for(const i in this.touchKey){
+				switch(i){
+					case 'Swipe':
+						let swipeX = this.touchEnd[0] - this.touchStart[0];
+						let swipeY = this.touchEnd[1] - this.touchStart[1];
+						let direction = '';
+						if(this.touchKey[i] == '4'){
+							if(Math.abs(swipeX) > Math.abs(swipeY)){
+								if(swipeX > 0)
+									direction = 'Right';
+								else
+									direction = 'Left';
+							}else{
+								if(swipeY > 0)
+									direction = 'Down';
+								else
+									direction = 'Up';
+							}
+						}
+						this.helper_insertStack(direction);
+						this.gameLink(this.keyStackOrder);
+						break;
+					case 'Drag':
+						this.gameLink();
+						break;
+					case 'Tap':
+						this.gameLink();
+						break;
+					case 'UnTap':
+						this.gameLink();
+						break;
+					default:{
+
+					}
+						
+				}
+			}
+
+			for(const i in this.keyStackOrder){
+				if(this.keyStackOrder[i] == event.code){
+					return false;
+				}
+			}
+			for(const i in this.useKey){
+				if(this.useKey[i] == event.code){
+					this.keyStackOrder.push(this.useKey[i]);
+					return true;
+				}
+			}
+		}
+
 		runBinding(){
-			window.addEventListener('keydown', (event)=> this.tapPress(event));
-			window.addEventListener('keyup', (event)=> this.outPress(event));
+			window.addEventListener('keydown', e=> this.tapPress(e));
+			window.addEventListener('keyup', e=> this.outPress(e));
+			window.addEventListener('touchstart', e => this.touchTap(e));
+			window.addEventListener('touchend', e => this.touchGone(e));
 		}
 
 
@@ -823,6 +985,56 @@
 	snakeKeyBind.runBinding();
 
 	////// SNAKE ENGINE
+	class snakeEngine{
+		constructor(){
+			this.difficulty = $D('#difficulty-slider').getAttribute('value');
+			this.start = false;
+			this.currentMove = 'right';
+			this.snakeLength = '';
+		}
+
+		helper_randInt(max) {
+			let x = Math.floor(Math.random() * max);
+			x = x==max?x-1:x;
+			return x;
+		}
+
+		gameStart(){
+			if(this.start == false){
+				this.makeSnake();
+				this.makeFood();
+				this.start = true;
+			}
+		}
+		gameKeys(keys){
+
+		}
+		gamePause(){
+
+		}
+		gameOver(){
+			
+		}
+
+		insertRandomizeLocation(idName='', color='rgb(248, 252, 255)'){
+			let occupiedSpace = snakeScreen.getAvailableSpaceList();
+			snakeScreen.addPixel(idName, occupiedSpace[this.helper_randInt(Object.keys(occupiedSpace).length)], color);
+		}
+
+		moveSnake(){
+			let map = snakeScreen.pixel;
+		}
+		makeSnake(){
+			this.insertRandomizeLocation('snake');
+		}
+		makeFood(){
+			this.insertRandomizeLocation('snake-food', 'rgb(255, 87, 51)');
+		}
+		
+	}
+	let snakeGame = new snakeEngine();
+
+	snakeKeyBind.insertGameLink(snakeGame.gameKeys);
 	</script>
 </body>
 </html>
