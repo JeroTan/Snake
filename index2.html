@@ -244,6 +244,9 @@
 		.myW-100{
 			width: 100%;
 		}
+		.myH-100{
+			height: 100%;
+		}
 
 
 		/* Positions */
@@ -422,14 +425,20 @@
 		<div id="game-container" class="myOverflow-Hidden myBorderRadius-5p myBorderOutline-All-1-1p">
 			<!-- Screen of the game-->
 			<div id="game-screen" class="myBG-4">
-				<!-- <div class="myPos-absolute myBG-2" id="snake" style="left: 620px; bottom: 0px; width: 20px; height: 20px;"></div> -->
+				<div id="game-screen-map" class="myPos-absolute myBG01 myW-100 myH-100" >
+					<!-- <div class="myPos-absolute myBG-2" id="snake" style="left: 620px; bottom: 0px; width: 20px; height: 20px;"></div> -->
+				</div>
+				<div id="game-screen-click" class="myPos-absolute myBG01 myW-100 myH-100">
+
+				</div>
+				
 			</div>
 			<!-- The Main Controls of the game-->
 			<div id="game-control" class="myBG-5">
 				<!-- pause and play-->
 				<div class="myBG-1 myFD-col-NW myP-sm-2 myBorderRadius-10p myFA-center myFJ-center">
-					<button id="game-button-start" type="button" class="myBG-4 myFC-2 myBorderRadius-5p myCursor-pointer" >START</button>
-					<button id="game-button-pause" type="button" class="myBG-4 myFC-2 myBorderRadius-5p myCursor-pointer" >PAUSE</button>
+					<button id="game-button-start" type="button" class="myBG-4 myFC-2 myBorderRadius-5p myCursor-pointer" onclick="snakeGame.gameStart()">START</button>
+					<button id="game-button-pause" type="button" class="myBG-4 myFC-2 myBorderRadius-5p myCursor-pointer" onclick="snakeGame.gamePause()">PAUSE</button>
 				</div>
 				<!-- Score-->
 				<div id="game-score-board" class="myBG-1 myFD-col-NW myP-1 myBorderRadius-10p myFC-2">
@@ -489,10 +498,12 @@
 	<script type="text/javascript">
 		let $D = (x) => document.querySelector(x);
 		class Screen{
-			constructor(screenID, pixel = [40, 40], size = [800, 800], framerate = 30){ //width height //x y //pixel size minus 1
-				this.screenID = screenID;
+			constructor(screenPixelID, screenClickID, pixel = [40, 40], size = [800, 800], framerate = 30){ //width height //x y //pixel size minus 1
+				this.screenPixelID = screenPixelID;
+				this.screenClickID = screenClickID
 				this.pixel = pixel;
 				this.size = size;
+				this.cacheMap = {};
 				this.pixelMap = {};
 				this.pixelMapMemory = [{}];
 				this.clickMap = {};
@@ -501,7 +512,8 @@
 				this.availableSpace = pixel[0]*pixel[1];
 				this.occupiedSpace = 0;
 				this.framerate = 30;
-				this.$ID = $D('#'+this.screenID);
+				this.$ID = $D('#'+this.screenPixelID);
+				this.$CID = $D('#'+this.screenClickID);
 				this.runScreen = setInterval(()=>{
 					this.updateScreen();
 				}, Math.floor(1000/framerate) )
@@ -516,6 +528,12 @@
 					node.setAttribute(''+i, attributes[i]);
 				}
 				return node;
+			}
+			helper_deleteMap(x, y){
+				delete this.pixelMap[x][y];
+				if( (Object.getOwnPropertyNames(this.pixelMap[x])).length <= 0 ){
+					delete this.pixelMap[x];
+				}	
 			}
 			/*||| Preferably use within the class only |||*/
 
@@ -541,7 +559,7 @@
 				if(id){
 					if(location){
 						if( this.pixelMap.hasOwnProperty( [location[0]] ) && this.pixelMap[location[0]].hasOwnProperty( location[1] ) && this.pixelMap[location[0]][location[1]].id == id){
-							return true;
+							return [location[0], location[1]];
 						}
 					}
 					else{
@@ -549,7 +567,8 @@
 							for(const j in this.pixelMap[i]){
 								let contents = this.pixelMap[i][j];
 								if(contents.id == id){
-									return true;
+									return [i, j];
+									break;
 								}
 							}
 						}
@@ -557,7 +576,7 @@
 				}
 				else if(location){
 					if( this.pixelMap.hasOwnProperty( [location[0]] ) && this.pixelMap[location[0]].hasOwnProperty( location[1] ) ){
-						return true;
+						return [location[0], location[1]];
 					}
 				}
 				return false;
@@ -613,12 +632,11 @@
 			
 			/////// Remove the Pixel that are map in the mapping using either name or location
 			removePixel(idName='', location = [0,0]){
-				let altPixelMap = this.pixelMap;
 				if(idName){
 					for(const i in this.pixelMap){
 						for(const j in this.pixelMap[i]){
 							if(this.pixelMap[i][j].id == idName){
-								deleteMap(i, j);
+								this.helper_deleteMap(i, j);
 								--this.occupiedSpace;
 								++this.availableSpace;
 								break;
@@ -629,14 +647,7 @@
 					if( this.pixelMap.hasOwnProperty( location[0] ) && this.pixelMap[ location[0] ].hasOwnProperty( location[1] ) ){
 						--this.occupiedSpace;
 						++this.availableSpace;
-						deleteMap(location[0], location[1]);
-					}
-				}
-				// Delete File
-				function deleteMap(x, y){
-					delete altPixelMap[x][y];
-					if( (Object.getOwnPropertyNames(altPixelMap[x])).length <= 0 ){
-						delete altPixelMap[x];
+						this.helper_deleteMap(location[0], location[1]);
 					}
 				}
 			}
@@ -655,7 +666,7 @@
 						let xForward = directionX=='RIGHT'?from[0]+i:from[0]-i;
 						let yForward = directionY=='DOWN'?from[1]+Math.floor(i/ratio):from[1]-Math.floor(i/ratio);
 						if(!reverseDraw){
-							this.addPixel('', [xForward, yForward]);
+							this.addPixel('', [xForward, yForward], color);
 						}
 						else{
 							this.removePixel('', [xForward, yForward]);
@@ -706,11 +717,11 @@
 			}
 
 			savePixelMap(location = 0){
-				this.pixelMapMemory[0] = structuredClone(this.pixelMap);
+				this.pixelMapMemory[location] = structuredClone(this.pixelMap);
 			}
 			
 			loadPixelMap(location = 0){
-				this.pixelMap = structuredClone(this.pixelMapMemory[0]);
+				this.pixelMap = structuredClone(this.pixelMapMemory[location]);
 			}
 
 			addToScreen(idName='', location = [0,0], color = 'rgb(248, 252, 255)'){
@@ -759,28 +770,11 @@
 				}
 			}
 			
-			clearScreen(allClear = false, pixel = true, click = false){
-				if(allClear){
-					this.$ID.textContent = '';
-				}
-				else{
-					if(pixel){
-						for(const i in this.pixelMap){
-							for(const j in this.pixelMap[i]){
-								this.removeToScreen('', [i, j]);
-							}
-						}
-					}
-					if(click){
-						for(const i in this.clickMap){
-							this.removeClickScreen(this.clickMap[i]['id']);
-						}
-					}
-					
-				}
-				
+			clearScreen(){
+				this.$ID.textContent = '';
 			}
 			
+			/*|||  CLICK MAP HERE |||*/
 			addClickZone(idName='', handler = 'onclick', bind = 'alert(\'HERE!\')', cursor='pointer', from = [0,0], to = [1,1]){
 				// Add to internal Mapping
 				if(!this.clickMap.hasOwnProperty( idName )){
@@ -813,13 +807,13 @@
 
 				//Insert it to the DOM screen				
 				newNode = this.helper_setAttribute(newNode, {'id':idName, 'class':'myOpa-0 '+('cz-'+from[0]+'_'+from[1]), 'style':height+width+x+y+additionalStyle, [handler]:bind});
-				this.$ID.prepend(newNode);
+				this.$CID.prepend(newNode);
 			}
 
 			removeClickScreen(idName= ''){
 				for(const i in this.clickMap){
 					if(this.clickMap[i]['id'] == idName){
-						this.$ID.removeChild($D('#'+idName));
+						this.$CID.removeChild($D('#'+idName));
 						break;
 					}
 				}
@@ -832,10 +826,20 @@
 			}
 
 			clearClickScreen(){
+				this.$CID.textContent = '';
+			}
 
+			saveClickMap(location = 0){
+				this.clickMapMemory[location] = structuredClone(this.clickMap);
+			}
+			
+			loadClickMap(location = 0){
+				this.clickMap = structuredClone(this.clickMapMemory[location]);
 			}
 		}
-	let snakeScreen = new Screen('game-screen');
+	let snakeScreen = new Screen('game-screen-map', 'game-screen-click');
+	snakeScreen.changeSize([$D('#game-screen').clientWidth, $D('#game-screen').clientHeight]);
+	/*
 	snakeScreen.addPixel('snake', [4,1]);
 	snakeScreen.addPixel('', [39,39]);
 	snakeScreen.addPixel('', [29,34]);
@@ -851,9 +855,175 @@
 	snakeScreen.updateScreen();
 	snakeScreen.addClickZone('HELLOWORLD', 'onclick', 'alert(\'HERE!\')', 'pointer', [0,0], [10,10]);
 	snakeScreen.updateClickScreen();
+	snakeScreen.updateClickScreen();
 	console.log(snakeScreen.getOccupiedSpaceList());
 	let exampletime = 0;
+	*/
+	
+	// S
+	snakeScreen.drawPixel([6, 21], [9, 21], false, 'rgb(35, 195, 231)');
+	snakeScreen.drawPixel([6, 22], [6, 23], false, 'rgb(35, 195, 231)');
+	snakeScreen.drawPixel([7, 23], [8, 23], false, 'rgb(35, 195, 231)');
+	snakeScreen.drawPixel([9, 24], [9, 26], false, 'rgb(35, 195, 231)');
+	snakeScreen.drawPixel([8, 26], [6, 26], false, 'rgb(35, 195, 231)');
+	snakeScreen.addPixel('', [6, 25], 'rgb(35, 195, 231)');
+	// T
+	snakeScreen.drawPixel([11, 21], [15, 21], false, 'rgb(35, 195, 231)');
+	snakeScreen.drawPixel([13, 22], [13, 26], false, 'rgb(35, 195, 231)');
+	// A
+	snakeScreen.addPixel('', [19, 21], 'rgb(35, 195, 231)');
+	snakeScreen.drawPixel([18, 22], [18, 23], false, 'rgb(35, 195, 231)');
+	snakeScreen.drawPixel([20, 22], [20, 23], false, 'rgb(35, 195, 231)');
+	snakeScreen.drawPixel([17, 24], [21, 24], false, 'rgb(35, 195, 231)');
+	snakeScreen.drawPixel([17, 25], [17, 26], false, 'rgb(35, 195, 231)');
+	snakeScreen.drawPixel([21, 25], [21, 26], false, 'rgb(35, 195, 231)');
+	// R
+	snakeScreen.drawPixel([24, 21], [24, 26], false, 'rgb(35, 195, 231)');
+	snakeScreen.drawPixel([25, 21], [26, 21], false, 'rgb(35, 195, 231)');
+	snakeScreen.drawPixel([27, 22], [27, 23], false, 'rgb(35, 195, 231)');
+	snakeScreen.drawPixel([26, 24], [25, 24], false, 'rgb(35, 195, 231)');
+	snakeScreen.drawPixel([27, 25], [27, 26], false, 'rgb(35, 195, 231)');
+	// T
+	snakeScreen.drawPixel([29, 21], [33, 21], false, 'rgb(35, 195, 231)');
+	snakeScreen.drawPixel([31, 22], [31, 26], false, 'rgb(35, 195, 231)');
 
+	// P
+	snakeScreen.drawPixel([6, 12], [6, 17], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([7, 12], [8, 12], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([9, 13], [9, 14], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([7, 15], [8, 15], false, 'rgb(70, 94, 157)');
+	// R
+	snakeScreen.drawPixel([12, 12], [12, 17], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([13, 12], [14, 12], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([15, 13], [15, 14], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([13, 15], [14, 15], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([15, 16], [15, 17], false, 'rgb(70, 94, 157)');
+	// E
+	snakeScreen.drawPixel([18, 12], [18, 17], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([18, 12], [21, 12], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([18, 14], [20, 14], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([13, 15], [14, 15], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([19, 17], [21, 17], false, 'rgb(70, 94, 157)');
+	// S
+	snakeScreen.drawPixel([24, 12], [27, 12], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([24, 13], [24, 14], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([25, 14], [26, 14], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([27, 15], [27, 17], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([26, 17], [24, 17], false, 'rgb(70, 94, 157)');
+	snakeScreen.addPixel('', [24, 16], 'rgb(70, 94, 157)');
+	// S
+	snakeScreen.drawPixel([30, 12], [33, 12], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([30, 13], [30, 14], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([31, 14], [32, 14], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([33, 15], [33, 17], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([33, 17], [30, 17], false, 'rgb(70, 94, 157)');
+	snakeScreen.addPixel('', [30, 16], 'rgb(70, 94, 157)');
+
+	snakeScreen.savePixelMap(1);
+	snakeScreen.clearAllPixel();
+
+	snakeScreen.addClickZone('game-start', 'onclick', 'snakeGame.gameStart()', 'pointer', [0,0], [39,39]);
+	snakeScreen.saveClickMap(1);
+	snakeScreen.removeClickZone('game-start');
+
+	//P
+	snakeScreen.drawPixel([3, 17], [3, 22], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([4, 17], [5, 17], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([6, 18], [6, 19], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([5, 20], [4, 20], false, 'rgb(70, 94, 157)');
+	//A
+	snakeScreen.addPixel('', [10, 17], 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([9, 18], [9, 19], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([11, 18], [11, 19], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([8, 20], [12, 20], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([8, 21], [8, 22], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([12, 21], [12, 22], false, 'rgb(70, 94, 157)');
+	//U
+	snakeScreen.drawPixel([15, 17], [15, 21], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([16, 22], [18, 22], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([19, 17], [19, 21], false, 'rgb(70, 94, 157)');
+	//S
+	snakeScreen.drawPixel([23, 17], [25, 17], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([22, 18], [22, 19], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([23, 20], [24, 20], false, 'rgb(70, 94, 157)');
+	snakeScreen.addPixel('', [25, 21], 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([22, 22], [24, 22], false, 'rgb(70, 94, 157)');
+	//E
+	snakeScreen.drawPixel([27, 17], [27, 22], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([28, 17], [30, 17], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([28, 20], [29, 20], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([28, 22], [30, 22], false, 'rgb(70, 94, 157)');
+	//D
+	snakeScreen.drawPixel([32, 17], [32, 22], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([33, 17], [35, 17], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([36, 18], [36, 21], false, 'rgb(70, 94, 157)');
+	snakeScreen.drawPixel([33, 22], [35, 22], false, 'rgb(70, 94, 157)');
+
+	snakeScreen.savePixelMap(2);
+	snakeScreen.clearAllPixel();
+
+	snakeScreen.addClickZone('game-pause', 'onclick', 'snakeGame.gameUnPause()', 'pointer', [0,0], [39,39]);
+	snakeScreen.saveClickMap(2);
+	snakeScreen.removeClickZone('game-pause');
+
+	//G
+	snakeScreen.drawPixel([6, 13], [10, 13], false, 'rgb(254, 183, 177)');
+	snakeScreen.drawPixel([5, 14], [5, 17], false, 'rgb(254, 183, 177)');
+	snakeScreen.drawPixel([6, 18], [10, 18], false, 'rgb(254, 183, 177)');
+	snakeScreen.drawPixel([11, 17], [11, 16], false, 'rgb(254, 183, 177)');
+	snakeScreen.drawPixel([10, 16], [9, 16], false, 'rgb(254, 183, 177)');
+	snakeScreen.addPixel('', [6, 14], 'rgb(254, 183, 177)');
+	snakeScreen.addPixel('', [6, 17 ], 'rgb(254, 183, 177)');
+	//A
+	snakeScreen.drawPixel([14, 13], [16, 13], false, 'rgb(254, 183, 177)');
+	snakeScreen.drawPixel([14, 14], [16, 14], false, 'rgb(254, 183, 177)');
+	snakeScreen.drawPixel([13, 15], [13, 18], false, 'rgb(254, 183, 177)');
+	snakeScreen.drawPixel([14, 15], [14, 17], false, 'rgb(254, 183, 177)');
+	snakeScreen.drawPixel([16, 15], [16, 17], false, 'rgb(254, 183, 177)');
+	snakeScreen.drawPixel([17, 15], [17, 18], false, 'rgb(254, 183, 177)');
+	snakeScreen.addPixel('', [15, 17], 'rgb(254, 183, 177)');
+	//M
+	snakeScreen.drawPixel([20, 14], [20, 18], false, 'rgb(254, 183, 177)');
+	snakeScreen.drawPixel([21, 13], [21, 14], false, 'rgb(254, 183, 177)');
+	snakeScreen.drawPixel([22, 13], [22, 15], false, 'rgb(254, 183, 177)');
+	snakeScreen.drawPixel([23, 14], [23, 18], false, 'rgb(254, 183, 177)');
+	snakeScreen.drawPixel([24, 15], [24, 18], false, 'rgb(254, 183, 177)');
+	snakeScreen.drawPixel([25, 13], [25, 14], false, 'rgb(254, 183, 177)');
+	snakeScreen.drawPixel([26, 13], [26, 15], false, 'rgb(254, 183, 177)');
+	snakeScreen.drawPixel([27, 14], [27, 18], false, 'rgb(254, 183, 177)');
+	//E
+	snakeScreen.drawPixel([30, 13], [30, 18], false, 'rgb(254, 183, 177)');
+	snakeScreen.drawPixel([31, 13], [33, 13], false, 'rgb(254, 183, 177)');
+	snakeScreen.drawPixel([31, 15], [32, 15], false, 'rgb(254, 183, 177)');
+	snakeScreen.drawPixel([31, 18], [33, 18], false, 'rgb(254, 183, 177)');
+	//O
+	snakeScreen.drawPixel([7, 22], [7, 25], false, 'rgb(255, 61, 45)');
+	snakeScreen.drawPixel([8, 21], [8, 22], false, 'rgb(255, 61, 45)');
+	snakeScreen.drawPixel([8, 25], [8, 26], false, 'rgb(255, 61, 45)');
+	snakeScreen.drawPixel([9, 21], [11, 21], false, 'rgb(255, 61, 45)');
+	snakeScreen.drawPixel([9, 26], [11, 26], false, 'rgb(255, 61, 45)');
+	snakeScreen.drawPixel([12, 21], [12, 22], false, 'rgb(255, 61, 45)');
+	snakeScreen.drawPixel([12, 25], [12, 26], false, 'rgb(255, 61, 45)');
+	snakeScreen.drawPixel([13, 22], [13, 25], false, 'rgb(255, 61, 45)');
+	//V
+	snakeScreen.drawPixel([16, 21], [16, 24], false, 'rgb(255, 61, 45)');
+	snakeScreen.drawPixel([17, 25], [17, 26], false, 'rgb(255, 61, 45)');
+	snakeScreen.drawPixel([18, 25], [18, 26], false, 'rgb(255, 61, 45)');
+	snakeScreen.drawPixel([19, 21], [19, 24], false, 'rgb(255, 61, 45)');
+	//E
+	snakeScreen.drawPixel([23, 21], [23, 26], false, 'rgb(255, 61, 45)');
+	snakeScreen.drawPixel([24, 21], [26, 21], false, 'rgb(255, 61, 45)');
+	snakeScreen.drawPixel([24, 23], [25, 23], false, 'rgb(255, 61, 45)');
+	snakeScreen.drawPixel([24, 26], [26, 26], false, 'rgb(255, 61, 45)');
+	//R
+	snakeScreen.drawPixel([29, 21], [29, 26], false, 'rgb(255, 61, 45)');
+	snakeScreen.drawPixel([30, 21], [31, 21], false, 'rgb(255, 61, 45)');
+	snakeScreen.drawPixel([32, 22], [32, 23], false, 'rgb(255, 61, 45)');
+	snakeScreen.drawPixel([30, 24], [31, 24], false, 'rgb(255, 61, 45)');
+	snakeScreen.drawPixel([32, 25], [32, 26], false, 'rgb(255, 61, 45)');
+
+	snakeScreen.savePixelMap(3);
+	snakeScreen.clearAllPixel();
 
 	////// KEY MAPPING
 	class KeyBind{
@@ -868,7 +1038,7 @@
 			this.keyStackOrder = [];
 			this.useKey = useKey;
 			this.touchKey = touchKey;
-			this.gameLink = gameLink;
+			this.gameLink = a => gameLink(a);
 		}
 
 		insertGameLink(callback){
@@ -893,10 +1063,9 @@
 			for(const i in this.useKey){
 				if(this.useKey[i] == event.code){
 					this.keyStackOrder.push(this.useKey[i]);
-					return true;
 				}
 			}
-			this.gameLink();
+			this.gameLink(this.keyStackOrder);
 		}
 
 		outPress(event){
@@ -907,7 +1076,7 @@
 					break;
 				}
 			}
-			this.gameLink();
+			this.gameLink(this.keyStackOrder);
 		}
 
 		touchTap(event){
@@ -929,19 +1098,23 @@
 						let direction = '';
 						if(this.touchKey[i] == '4'){
 							if(Math.abs(swipeX) > Math.abs(swipeY)){
-								if(swipeX > 0)
+								if(swipeX > 10)
 									direction = 'Right';
-								else
+								else if(swipeX < -10)
 									direction = 'Left';
 							}else{
-								if(swipeY > 0)
+								if(swipeY > 10)
 									direction = 'Down';
-								else
+								else if(swipeY < -10)
 									direction = 'Up';
 							}
 						}
-						this.helper_insertStack(direction);
-						this.gameLink(this.keyStackOrder);
+						if(direction != ''){
+							this.keyStackOrder.push(direction);
+							this.gameLink(this.keyStackOrder);
+							delete this.keyStackOrder[ this.keyStackOrder.indexOf(direction) ];
+							this.keyStackOrder = this.keyStackOrder.filter(n => n != null);
+						}
 						break;
 					case 'Drag':
 						this.gameLink();
@@ -985,35 +1158,154 @@
 	snakeKeyBind.runBinding();
 
 	////// SNAKE ENGINE
-	class snakeEngine{
+	class SnakeEngine{
 		constructor(){
 			this.difficulty = $D('#difficulty-slider').getAttribute('value');
+			this.speed = Math.floor(1000/this.difficulty);
 			this.start = false;
 			this.currentMove = 'right';
-			this.snakeLength = '';
+			this.pastMove = 'right';
+			this.speedOfSnake = 1;
+			this.lengthOfSnake = 0;
+			this.gameRunning = 0;
+			this.isPause = 0;
 		}
 
 		helper_randInt(max) {
 			let x = Math.floor(Math.random() * max);
-			x = x==max?x-1:x;
+			x = x==max?x-1:x;	
 			return x;
 		}
 
+		gameMenu(){
+			snakeScreen.loadPixelMap(1);
+			snakeScreen.loadClickMap(1);
+			snakeScreen.updateClickScreen();
+		}
+		clearGameMenu(){
+			snakeScreen.clearAllPixel();
+			snakeScreen.removeClickZone('game-start');
+			snakeScreen.updateClickScreen();
+			snakeScreen.clearClickScreen();
+		}
 		gameStart(){
 			if(this.start == false){
+				this.clearGameMenu();
+				this.lengthOfSnake = 0;
+				this.currentMove = 'right';
+				this.pastMove = 'right';
+				this.difficulty = $D('#difficulty-slider').getAttribute('value');
+				this.speed = Math.floor(1000/this.difficulty);
+				this.speedOfSnake = 1;
 				this.makeSnake();
 				this.makeFood();
+				this.gameRunning = 1;
+				this.gameRun();
 				this.start = true;
 			}
 		}
+		gameRun(){
+			this.animateSnake = setInterval(()=>{
+				this.moveSnake();
+			}, Math.floor(this.speed*(1/this.speedOfSnake)) );
+		}
 		gameKeys(keys){
+			if(this.isPause != 1 && this.start != false){
+				let latestActiveKey = keys[keys.length-1];
+				let oldMove = this.currentMove;
+				switch(latestActiveKey){
+					case 'ArrowUp':
+					case 'KeyW':
+					case 'Up':
+						this.currentMove = 'up';
+					break;
 
+					case 'ArrowRight':
+					case 'KeyD':
+					case 'Right':
+						this.currentMove = 'right';
+					break;
+
+					case 'ArrowDown': 
+					case 'KeyS':
+					case 'Down': 
+						this.currentMove = 'down';
+					break;
+
+					case 'ArrowLeft': 
+					case 'KeyA': 
+					case 'Left': 
+						this.currentMove = 'left';
+					break;
+				}
+
+				if( (this.currentMove == 'left' || this.currentMove == 'right') && (oldMove == 'left' || oldMove == 'right')){
+					this.currentMove = oldMove;
+				}
+				else if( (this.currentMove == 'down' || this.currentMove == 'up' ) && (oldMove == 'down' || oldMove == 'up' )){
+					this.currentMove = oldMove;
+				}
+				
+
+				let speeding = false;
+				for(const i in keys){
+					if(keys[i] == 'Space'){
+						speeding = true;
+						break;
+					}
+				}
+				if(this.speedOfSnake == 1 && speeding == true){
+					this.speedOfSnake = 2;
+					this.changeSpeed();
+				}
+				else if(this.speedOfSnake == 2 && speeding == false){
+					
+					this.speedOfSnake = 1;
+					this.changeSpeed();
+				}
+			}
 		}
+
 		gamePause(){
-
+			if(this.isPause == 0){
+				clearInterval(this.animateSnake);
+				snakeScreen.savePixelMap(0);
+				snakeScreen.clearAllPixel();
+				snakeScreen.loadPixelMap(2);
+				snakeScreen.loadClickMap(2);
+				snakeScreen.updateClickScreen();
+				this.isPause = 1;
+			}
 		}
+		gameUnPause(){
+			if(this.isPause == 1){
+				snakeScreen.clearAllPixel();
+				snakeScreen.clearScreen();
+				snakeScreen.removeClickZone('game-pause')
+				snakeScreen.clearClickScreen();
+				snakeScreen.loadPixelMap(0);
+				this.gameRun();
+				this.isPause = 0;
+			}
+		}
+
 		gameOver(){
-			
+			if(this.start == true){
+				this.start = false;
+				clearInterval(this.animateSnake);
+				snakeScreen.clearAllPixel();
+				snakeScreen.loadPixelMap(3);
+				snakeScreen.loadClickMap(1);
+				snakeScreen.updateClickScreen();
+				return true;
+			}	
+		}
+
+		changeSpeed(){
+			clearInterval(this.animateSnake);
+			this.animateSnake = setInterval(()=>{
+				this.moveSnake();
+			}, Math.floor(this.speed*(1/this.speedOfSnake)) );
 		}
 
 		insertRandomizeLocation(idName='', color='rgb(248, 252, 255)'){
@@ -1022,19 +1314,106 @@
 		}
 
 		moveSnake(){
-			let map = snakeScreen.pixel;
+			if(this.start == false && this.gamePause != 1)
+				return false;
+
+			let moveset = snakeScreen.checkPixelMap('snake-head');
+			moveset = [parseInt(moveset[0]), parseInt(moveset[1])];
+			let oldMove = [moveset[0], moveset[1]];
+			let pixelHeight = snakeScreen.pixel[0];
+			let pixelWidth = snakeScreen.pixel[1];
+			switch(this.currentMove){
+				case 'up':
+					if(this.pasttMove != 'down'){
+						moveset[1] = moveset[1]-1<0?pixelHeight-1:moveset[1]-1;
+						this.pastMove = this.currentMove;
+					}
+					break;
+				case 'right':
+					if(this.pasttMove != 'left'){
+						moveset[0] = (moveset[0]+1)%pixelWidth;
+						this.pastMove = this.currentMove;
+					}	
+					break;
+				case 'down':
+					if(this.pasttMove != 'up'){
+						moveset[1] = (moveset[1]+1)%pixelHeight;
+						this.pastMove = this.currentMove;
+					}
+						
+					break;
+				case 'left':
+					if(this.pasttMove != 'right'){
+						moveset[0] = moveset[0]-1<0?pixelWidth-1:moveset[0]-1;
+						this.pastMove = this.currentMove;
+					}
+					break;
+			}
+			if( !this.eatTail(moveset) ){
+				let checkMateFood = this.eatFood(moveset);
+				snakeScreen.removePixel('snake-head');
+				snakeScreen.addPixel('snake-head', moveset, 'rgb(100, 165, 244)');
+				this.tailingSnake(oldMove, 1, checkMateFood);
+			}
+			else{
+				this.gameOver();
+			}
+			
 		}
+
+		tailingSnake(moveset, length, eatFood){
+			if(length > this.lengthOfSnake){
+				if(eatFood == true){
+					snakeScreen.addPixel('snake-tail-'+length, moveset, 'rgb(90, 150, 223)');
+					this.lengthOfSnake = length;
+				}
+				return false;
+			}else{
+				let oldmove = snakeScreen.checkPixelMap('snake-tail-'+length);
+				snakeScreen.removePixel('snake-tail-'+length);
+				snakeScreen.addPixel('snake-tail-'+length, moveset, 'rgb(90, 150, 223)');
+				this.tailingSnake(oldmove, length+1, eatFood);
+			}
+		}
+
 		makeSnake(){
-			this.insertRandomizeLocation('snake');
+			this.insertRandomizeLocation('snake-head', 'rgb(100, 165, 244)');
 		}
 		makeFood(){
 			this.insertRandomizeLocation('snake-food', 'rgb(255, 87, 51)');
 		}
+
+		eatFood(nextMove){
+			let foodLocation = snakeScreen.checkPixelMap('snake-food');
+			if(foodLocation[0] == nextMove[0] && foodLocation[1] == nextMove[1]){
+				snakeScreen.removePixel('snake-food');
+				this.makeFood();
+				return true;
+			}
+			return false;
+		}
+
+		eatTail(nextMove, index = this.lengthOfSnake){
+			if(index > 0){
+				let tail = snakeScreen.checkPixelMap('snake-tail-'+index);
+				if(this.gameRunning == 0 || (tail[0] == nextMove[0] && tail[1] == nextMove[1])){
+					return true;
+					this.gameRunning = 0;
+				}
+				else{
+					if( this.eatTail(nextMove, index-1) ){
+						return true;
+						this.gameRunning = 0;
+					}
+				}
+			}
+			return false;
+		}
 		
 	}
-	let snakeGame = new snakeEngine();
-
-	snakeKeyBind.insertGameLink(snakeGame.gameKeys);
+	let snakeGame = new SnakeEngine();
+	snakeGame.gameMenu();
+	snakeKeyBind.insertGameLink((event)=>snakeGame.gameKeys(event));
 	</script>
 </body>
 </html>
