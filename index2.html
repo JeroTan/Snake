@@ -34,10 +34,14 @@
 			margin: 0;
 			padding: 0;
 		}
+		button:disabled, button[disabled]{
+			filter: brightness(50%) contrast(70%) saturate(70%) invert(10%);
+			cursor: default;
+		}
 
 		#sideButton{
 			position: fixed;
-			top: 10vh;
+			top: 20vh;
 			left: 0;
 
 		}
@@ -428,7 +432,7 @@
 				<div id="game-screen-map" class="myPos-absolute myBG01 myW-100 myH-100" >
 					<!-- <div class="myPos-absolute myBG-2" id="snake" style="left: 620px; bottom: 0px; width: 20px; height: 20px;"></div> -->
 				</div>
-				<div id="game-screen-click" class="myPos-absolute myBG01 myW-100 myH-100">
+				<div id="game-screen-click" class="myPos-absolute myBG01 myW-100 myH-100">s
 
 				</div>
 				
@@ -437,8 +441,8 @@
 			<div id="game-control" class="myBG-5">
 				<!-- pause and play-->
 				<div class="myBG-1 myFD-col-NW myP-sm-2 myBorderRadius-10p myFA-center myFJ-center">
-					<button id="game-button-start" type="button" class="myBG-4 myFC-2 myBorderRadius-5p myCursor-pointer" onclick="snakeGame.gameStart()">START</button>
-					<button id="game-button-pause" type="button" class="myBG-4 myFC-2 myBorderRadius-5p myCursor-pointer" onclick="snakeGame.gamePause()">PAUSE</button>
+					<button id="game-button-start" type="button" class="myBG-4 myFC-2 myBorderRadius-5p myCursor-pointer" onclick="snakeGame.gameStart()" >START</button>
+					<button id="game-button-pause" type="button" class="myBG-4 myFC-2 myBorderRadius-5p myCursor-pointer" onclick="snakeGame.gamePause()" disabled>PAUSE</button>
 				</div>
 				<!-- Score-->
 				<div id="game-score-board" class="myBG-1 myFD-col-NW myP-1 myBorderRadius-10p myFC-2">
@@ -472,7 +476,7 @@
 	<aside id="sideButton" class="myFD-row-NW myFA-center myFont-Coda myFC-2">
 		<!-- Main Menu-->
 		<div id="sideButton-menu" class="myBG-1 myBorderRadius-TRBR-1r" style="padding: 10px 0 5px 0;">
-			<ul class= myFontWeight-lighter" style="list-style-type: none; padding-left: 10px;">
+			<ul class= myFontWeight-lighter" style="list-style-type: none; padding-left: 10px; padding-top: 10px;">
 				<li>W - Up</li>
 				<li>S - Down</li>
 				<li>A - Left</li>
@@ -483,16 +487,25 @@
 				<li>____</li>
 			</ul>
 			<h2 class="myTextAlign-center myFontSize-1 myFC-3 myFontWeight-lighter" style="padding-top: 10px;">CHOOSE DIFFICULTY</h2>
-			<div class="" style="padding: 0 5px 0 5px">
-				<input id="difficulty-slider" class="myW-100 myM-0" type="range" min="1" max="7" value="5">
-				<div id="difficulty-range" style="padding: 0 5px 0 5px" class="myW-100 myFJ-between">
-					<y>1</y><y>2</y><y>3</y><y>4</y><y>5</y><y>6</y><y>7</y>
+			<div class="" style="padding: 0 5px 10px 5px">
+				<input id="difficulty-slider" class="myW-100 myM-0" type="range" min="1" max="10" value="5" onchange="promptNewDifficulty()" oninput="promptNewDifficulty()">
+				<div id="difficulty-range" style="padding: 0 3px 0 3px" class="myW-100 myFJ-between">
+					<y style="transform: translate(50%, 0%);">1</y>
+					<y style="transform: translate(50%, 0%);">2</y>
+					<y style="transform: translate(50%, 0%);">3</y>
+					<y style="transform: translate(50%, 0%);">4</y>
+					<y style="transform: translate(50%, 0%);">5</y>
+					<y style="transform: translate(50%, 0%);">6</y>
+					<y style="transform: translate(50%, 0%);">7</y>
+					<y style="transform: translate(50%, 0%);">8</y>
+					<y style="transform: translate(50%, 0%);">9</y>
+					<y style="transform: translate(0%, 0%);">10</y>
 				</div>
-				<div id="difficulty-message" class="myFontSize-0_8">*click 'start' to restart the game with choosen difficulty.</div>
+				<div id="difficulty-message" class="myFontSize-0_8" style="display: none">*click 'restart' to restart the game with choosen difficulty.</div>
 			</div>
 		</div>
 		<!-- Main Menu Collapser-->
-		<div id="menu-button" class="myBG-1 myTextDirect-vertical myCursor-pointer myPy-1 myBorderRadius-TRBR-10p myFC-3 myTextOrient-upright" > CONTROLS </div>
+		<div id="menu-button" class="myBG-1 myTextDirect-vertical myCursor-pointer myPy-1 myBorderRadius-TRBR-10p myFC-3 myTextOrient-upright" onclick="openCloseMenu()"> CONTROLS </div>
 	</aside>
 
 	<script type="text/javascript">
@@ -1157,10 +1170,106 @@
 	let snakeKeyBind = new KeyBind();
 	snakeKeyBind.runBinding();
 
+	////// SCORE BOARD
+	class ScoreBoard{
+		constructor(timerID, scoreID, highScoreID){
+			this.timerID = '#'+timerID;
+			this.scoreID = '#'+scoreID;
+			this.hs_ID = '#'+highScoreID;
+			this.currentScore =0;
+			this.currentTime =0.0;
+			this.currentHighScore =0;
+			this.timeStarted = false;
+			this.timePaused = false;
+		}
+
+		startTime(){
+			if(this.timeStarted == false){
+				this.currentTime = 0;
+				$D(this.timerID).textContent = '';
+				$D(this.timerID).textContent = '0000000';
+				this.timeField = setInterval(()=>{
+					this.currentTime = this.currentTime+ 0.1;
+					this.updateTime();
+				}, 100);
+				this.timeStarted = true;
+			}
+		}
+		
+		pauseTime(){
+			if(this.timeStarted == true && this.timePaused == false){
+				clearInterval(this.timeField);
+				this.timePaused = true;
+			}
+		}
+		
+		unpauseTime(){
+			if(this.timeStarted == true && this.timePaused == true){
+				this.timeField = setInterval(()=>{
+					this.currentTime = this.currentTime+ 0.1;
+					this.updateTime();
+				}, 100);
+				this.timePaused = false;
+			}
+		}
+
+		stopTime(){
+			if(this.timeStarted == true){
+				clearInterval(this.timeField);
+				this.currentTime = 0;
+				this.timeStarted = false;
+			}
+		}
+
+		updateTime(){
+			let tempN = (this.currentTime + 10000000)+"";
+			$D(this.timerID).textContent = '';
+			$D(this.timerID).textContent = tempN.substring(1, 8);
+		}
+		
+		getCurrentTime(){
+			return Math.floor(this.currentTime);
+		}
+
+		//// Score Board
+		addCurrentScore(points){
+			this.currentScore = this.currentScore + points;
+		}
+		updateScore(){
+			let tempN = (this.currentScore + 10000000)+"";
+			$D(this.scoreID).textContent = '';
+			$D(this.scoreID).textContent = tempN.substring(1);
+		}
+		resetScore(){
+			this.currentScore = 0;
+			$D(this.scoreID).textContent = '';
+			$D(this.scoreID).textContent = '0000000';
+		}
+
+		//// HighScore
+		comchangeHighScore(){
+			if(this.currentScore > this.currentHighScore){
+				this.currentHighScore = this.currentScore;
+				this.updateHighScore();
+			}
+		}
+		updateHighScore(){
+			let tempN = (this.currentHighScore + 10000000)+"";
+			$D(this.hs_ID).textContent = '';
+			$D(this.hs_ID).textContent = tempN.substring(1);
+		}
+		clearHighScore(){
+			this.currentHighScore = 0;
+			$D(this.hs_ID).textContent = '';
+			$D(this.hs_ID).textContent = '0000000';
+		}
+	}
+	let scoreBoard = new ScoreBoard('game-score-time', 'game-score-score', 'game-score-highscore');
+
 	////// SNAKE ENGINE
 	class SnakeEngine{
 		constructor(){
-			this.difficulty = $D('#difficulty-slider').getAttribute('value');
+			this.difficulty = $D('#difficulty-slider').value;
 			this.speed = Math.floor(1000/this.difficulty);
 			this.start = false;
 			this.currentMove = 'right';
@@ -1190,11 +1299,14 @@
 		}
 		gameStart(){
 			if(this.start == false){
+				scoreBoard.startTime();
+				scoreBoard.resetScore();
+				this.eatInterval = 0;
 				this.clearGameMenu();
 				this.lengthOfSnake = 0;
 				this.currentMove = 'right';
 				this.pastMove = 'right';
-				this.difficulty = $D('#difficulty-slider').getAttribute('value');
+				this.difficulty = $D('#difficulty-slider').value;
 				this.speed = Math.floor(1000/this.difficulty);
 				this.speedOfSnake = 1;
 				this.makeSnake();
@@ -1202,7 +1314,15 @@
 				this.gameRunning = 1;
 				this.gameRun();
 				this.start = true;
+				$D('#game-button-pause').removeAttribute('disabled');
+				$D('#game-button-start').setAttribute('onclick', 'snakeGame.gameRestart()');
+				$D('#game-button-start').textContent = 'RESTART';
+				$D('#difficulty-message').setAttribute('style', 'display: none');
 			}
+		}
+		gameRestart(){
+			this.gameOver();
+			this.gameStart();
 		}
 		gameRun(){
 			this.animateSnake = setInterval(()=>{
@@ -1274,7 +1394,10 @@
 				snakeScreen.loadPixelMap(2);
 				snakeScreen.loadClickMap(2);
 				snakeScreen.updateClickScreen();
+				scoreBoard.pauseTime();
 				this.isPause = 1;
+				$D('#game-button-pause').textContent = 'PLAY';
+				$D('#game-button-pause').setAttribute('onclick', 'snakeGame.gameUnPause()');
 			}
 		}
 		gameUnPause(){
@@ -1285,7 +1408,10 @@
 				snakeScreen.clearClickScreen();
 				snakeScreen.loadPixelMap(0);
 				this.gameRun();
+				scoreBoard.unpauseTime();
 				this.isPause = 0;
+				$D('#game-button-pause').textContent = 'PAUSE';
+				$D('#game-button-pause').setAttribute('onclick', 'snakeGame.gamePause()');
 			}
 		}
 
@@ -1297,6 +1423,9 @@
 				snakeScreen.loadPixelMap(3);
 				snakeScreen.loadClickMap(1);
 				snakeScreen.updateClickScreen();
+				scoreBoard.stopTime();
+				$D('#game-button-pause').setAttribute('disabled', true);
+				$D('#game-button-start').textContent = 'START';
 				return true;
 			}	
 		}
@@ -1314,7 +1443,7 @@
 		}
 
 		moveSnake(){
-			if(this.start == false && this.gamePause != 1)
+			if(this.start == false || this.gamePause == 1)
 				return false;
 
 			let moveset = snakeScreen.checkPixelMap('snake-head');
@@ -1324,28 +1453,35 @@
 			let pixelWidth = snakeScreen.pixel[1];
 			switch(this.currentMove){
 				case 'up':
-					if(this.pasttMove != 'down'){
+					if(this.pastMove != 'down'){
 						moveset[1] = moveset[1]-1<0?pixelHeight-1:moveset[1]-1;
 						this.pastMove = this.currentMove;
+					}else{
+						moveset[1] = (moveset[1]+1)%pixelHeight;
 					}
 					break;
 				case 'right':
-					if(this.pasttMove != 'left'){
+					if(this.pastMove != 'left'){
 						moveset[0] = (moveset[0]+1)%pixelWidth;
 						this.pastMove = this.currentMove;
-					}	
+					}else{
+						moveset[0] = moveset[0]-1<0?pixelWidth-1:moveset[0]-1;
+					}
 					break;
 				case 'down':
-					if(this.pasttMove != 'up'){
+					if(this.pastMove != 'up'){
 						moveset[1] = (moveset[1]+1)%pixelHeight;
 						this.pastMove = this.currentMove;
+					}else{
+						moveset[1] = moveset[1]-1<0?pixelHeight-1:moveset[1]-1;
 					}
-						
 					break;
 				case 'left':
-					if(this.pasttMove != 'right'){
+					if(this.pastMove != 'right'){
 						moveset[0] = moveset[0]-1<0?pixelWidth-1:moveset[0]-1;
 						this.pastMove = this.currentMove;
+					}else{
+						moveset[0] = (moveset[0]+1)%pixelWidth;
 					}
 					break;
 			}
@@ -1388,6 +1524,10 @@
 			if(foodLocation[0] == nextMove[0] && foodLocation[1] == nextMove[1]){
 				snakeScreen.removePixel('snake-food');
 				this.makeFood();
+				scoreBoard.addCurrentScore( (scoreBoard.getCurrentTime() - this.eatInterval) < (7+parseInt(this.difficulty))?(2*this.difficulty):(1*this.difficulty) );
+				this.eatInterval = scoreBoard.getCurrentTime();
+				scoreBoard.updateScore();
+				scoreBoard.comchangeHighScore();
 				return true;
 			}
 			return false;
@@ -1414,6 +1554,45 @@
 	let snakeGame = new SnakeEngine();
 	snakeGame.gameMenu();
 	snakeKeyBind.insertGameLink((event)=>snakeGame.gameKeys(event));
+
+
+$D('button').addEventListener('onMouseDown', 	function (e) {
+	event.preventDefault();
+	return false;
+})
+$D('button').addEventListener('keyup', 	function (e) {
+	event.preventDefault();
+    return false;
+})
+
+
+let isMenuOpen = false;
+const gameMenuResize = ()=>{
+	console.log(window.innerWidth);
+	if(window.innerWidth < 1410){
+		$D('#sideButton-menu').setAttribute('style', 'display: none');
+		isMenuOpen = false;
+	}else{
+		$D('#sideButton-menu').setAttribute('style', 'display: block');
+		isMenuOpen = true;
+	}
+}
+gameMenuResize();
+window.addEventListener('resize', gameMenuResize);
+
+function openCloseMenu(){
+	if(isMenuOpen){
+		$D('#sideButton-menu').setAttribute('style', 'display: none');
+		isMenuOpen = false;
+	}else{
+		$D('#sideButton-menu').setAttribute('style', 'display: block');
+		isMenuOpen = true;
+	}
+}
+
+function promptNewDifficulty(){
+	$D('#difficulty-message').setAttribute('style', 'display: block');
+}
 	</script>
 </body>
 </html>
