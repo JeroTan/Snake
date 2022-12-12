@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Snake</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image" href="http://assets.stickpng.com/images/58428b65a6515b1e0ad75aaf.png">
+
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
+	<script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+
+	<link rel="preconnect" href="https://fonts.gstatic.com">
+	<link href="https://fonts.googleapis.com/css2?family=Coda&display=swap" rel="stylesheet">
+	<link rel="preconnect" href="https://fonts.gstatic.com">
+	<link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@200&display=swap" rel="stylesheet">
+
+	<style type="text/css">
+		body
+		{
+			background-color: rgba(57, 86, 104 , 0.7);
+			background-image: url("https://i.pinimg.com/originals/68/b3/52/68b35214959edb3e39bc8a1fb80c54bd.png");
+			background-blend-mode: multiply;
+			background-repeat: no-repeat;
+			background-attachment: fixed;
+			background-position: center;
+			background-size: cover;
+		}
+		div
+		{
+			margin: 0;
+			padding: 0;
+		}
+		div.box_tile
+		{
+			position: relative;
+			height: 700px;
+			width: 700px;
+			background-color: rgba(50, 50, 50, 1);
+		}
+		div.tile
+		{
+			position: absolute;
+			width: 20px;
+			height: 20px;
+			bottom: 0;
+		}
+		/*Font-------------------------------------*/
+		.font_weightBold
+		{
+			font-weight: 500;
+			text-align: center;
+		}
+		/*color------------------------------------*/
+		.my_color1
+		{
+			background-color: red;
+		}
+		.my_color2
+		{
+			background-color: yellow;
+		}
+		.my_c1
+		{
+			color: rgba(202, 255, 238, 1);
+		}
+		/*size-------------------------------------*/
+		.width_700px
+		{
+			width: 700px;
+		}
+		.width_100prc
+		{
+			width: 100%;
+		}
+		.width_95prc
+		{
+			width: 95%;
+		}
+		.width_90prc
+		{
+			width: 90%;
+		}
+		.width_88prc
+		{
+			width: 88%;
+		}
+		/*margins----------------------------------*/
+		.margin_3prc
+		{
+			margin: 3%;
+		}
+		.margin_autoLF
+		{
+			margin-left: auto;
+			margin-right: auto;
+		}
+		.margin_auto
+		{
+			margin: auto;
+		}
+		/*content_transform------------------------*/
+		.box_sizing
+		{
+			box-sizing: none;
+		}
+		/*positioning------------------------------*/
+		.position_relative
+		{
+			position: relative;
+		}
+
+		/*flex_box---------------------------------*/
+		.flex
+		{
+			display: flex;
+		}
+		.flex_justifyContent
+		{
+			justify-content: center;
+		}
+		.flex_alignContent
+		{
+			align-content: center;
+		}
+		.flex_col
+		{
+			flex-direction: column;
+		}
+		.flex_row
+		{
+			flex-direction: row;
+		}
+		.flex_wrap
+		{
+			flex-wrap: wrap;
+		}
+		.flex_justifyContentStart
+		{
+			justify-content: flex-start;
+		}
+		.flex_justifyContentSpaceAround
+		{
+			justify-content: space-around;
+		}
+		.flex_justifyContentSpaceBetween
+		{
+			justify-content: space-between;
+		}
+
+		/*ID's------------------------------*/
+		#total_time
+		{
+			font-family: 'Coda', cursive;
+		}
+		#start
+		{
+			font-family: 'Coda', cursive;
+			margin: auto;
+			margin-top: auto;
+			margin-bottom: auto;
+			width: 100px;
+			background-color: rgba(23, 66, 80 , 1);
+		}
+		#pause
+		{
+			font-family: 'Coda', cursive;
+			margin: auto;
+			margin-top: auto;
+			margin-bottom: auto;
+			width: 100px;
+			background-color: rgba(23, 66, 80 , 1);
+		}
+		#pause:active, #pause:hover, #pause:visited
+		{
+			background-color: rgba(148, 17, 17, 1);
+		}
+		#screen, #screen:hover, #screen:active, #screen:visited
+		{
+			font-family: 'Coda', cursive;
+			position: absolute;
+			height: 700px;
+			width: 700px;
+			background-color: rgba(0,0,0,0);
+			border: none;
+			outline: none;
+			z-index: 99;
+		}
+		#menu
+		{
+			background-color: rgba(0, 0, 0, 1);
+			width: 700px;
+			height: 150px;
+		}
+		#mainOption
+		{
+			background-color: rgba(31, 48, 54, 1);
+			height: 100px;
+			width: 150px;
+			margin-top: auto;
+			margin-bottom: auto;
+			margin-left: 30px;
+			border-radius: 5px;
+			overflow: hidden;
+		}
+		#scoreMenu
+		{
+			font-family: 'Coda', cursive;
+			font-size: 1.7em;
+			color: white;
+			background-color: rgba(66, 85, 98 , 1);
+			width: 450px;
+			height: 100px;
+			margin: auto;
+			border-radius: 5px;
+			overflow: hidden;
+		}
+		#totalTime
+		{
+			font-family: 'Inconsolata', monospace;
+			font-size: 1.2em;
+			text-align: center;
+			color: white;
+			background-color: rgba(35, 43, 48 , 1);
+			width: 100px;
+			height: 50px;
+			transition: 0.2s;
+		}
+		#totalScore
+		{
+			font-family: 'Inconsolata', monospace;
+			font-size: 1.2em;
+			text-align: center;
+			color: white;
+			background-color: rgba(35, 43, 48 , 1);
+			width: 140px;
+			height: 50px;
+			transition: 0.2s;
+		}
+		#highScore
+		{
+			font-family: 'Inconsolata', monospace;
+			font-size: 1.2em;
+			text-align: center;
+			color: white;
+			background-color: rgba(35, 43, 48 , 1);
+			width: 140px;
+			height: 50px;
+			transition: 0.2s;
+		}
+		#sideNote
+		{
+			position: absolute;
+			left: 0;
+			top: 20%;
+			height: 280px;
+			width: 200px;
+			background-color: rgba(106, 124, 135 , 1);
+			color: white;
+		}
+		#difficultyOption
+		{
+			width: 100%; 
+			appearance: none;
+			-webkit-appearance: none;
+			background-color: rgba(179, 183, 193 , 1);
+			border-radius: 4px;
+			overflow: hidden;
+		}
+		#difficultyOption:focus
+		{
+			outline: none;
+		}
+		#difficultyOption:hover
+		{
+			background-color: rgba(212, 218, 234, 1);
+		}
+		#difficultyOption::-webkit-slider-thumb
+		{
+			appearance: none;
+			width: 15px;
+			height: 15px;
+			cursor: pointer;
+			background-color: rgba(70, 94, 157, 1);
+		}
+		#difficultyRange
+		{
+			font-family: 'Inconsolata', monospace;
+			align-self: center;
+			font-weight: bold;
+		}
+		#noteLevel
+		{
+			font-family: 'Coda', cursive;
+			font-weight: lighter;
+			font-size: .8em;
+			margin-left: 5%;
+			margin-right: 5%;
+			visibility: hidden;
+		}
+		ul
+		{
+			font-family: 'Coda', cursive;
+			font-weight: bold;
+			list-style-type: none;
+			margin: 0;
+			padding: 0;
+		}
+		li
+		{
+			font-weight: lighter;
+		}
+	</style>
+
+	</title>
+</head>
+<body>
+	<section>
+		<div class="container flex flex_justifyContent flex_wrap">
+			<div class="flex flex_col flex_alignContent" style="margin-top: 1%;">
+				<div class="box_tile" id="box_container">
+					<button id="screen" onkeypress="keys(event)" onkeydown="fast(event)" onkeyup="slow(event)"></button>
+					<div class="tile my_color1" id="snake"></div>
+				</div>
+				<div class="flex flex_justifyContentStart" id="menu">
+					<div id="mainOption" class="flex flex_col flex_alignContent">
+						<button id="start" class="btn btn-success" onMouseDown="go()" onkeypress="keys(event)" onkeydown="fast(event)" onkeyup="slow(event)">START</button>
+						<button id="pause" class="btn btn-success" onMouseDown="pauseState()">PAUSE</button>
+					</div>
+					<div id="scoreMenu" class="flex flex_row flex_justifyContentSpaceAround flex_alignContent">
+						<div class="flex flex_col flex_justifyContent">
+							<div class="margin_autoLF">TIME</div> 
+							<div class="margin_autoLF" id="totalTime"></div>
+						</div>
+						<div class="flex flex_col flex_justifyContent">
+							<div class="margin_autoLF">SCORE</div>
+							<div class="margin_autoLF" id="totalScore"></div>
+						</div>
+						<div class="flex flex_col flex_justifyContent">
+							<div class="margin_autoLF">HIGHSCORE</div>
+							<div class="margin_autoLF" id="highScore"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<aside id="sideNote" class="flex flex_col flex_alignContent flex_justifyContentSpaceAround">
+			<div class="flex flex_justifyContent" style="margin-top: 10px;">
+				<ul style="margin-top: auto; margin-bottom: auto;">
+					<div class="my_c1 font_weightBold">CONTROLS</div>
+					<li>W - Up</li>
+					<li>S - Down</li>
+					<li>A - Left</li>
+					<li>D - Right</li>
+					<li>Space(Hold) - 2x Speed</li>
+				</ul>
+			</div>
+			<div class="flex flex_col flex_alignContent flex_justifyContent" style="margin-top: 5px;">
+				<div class="font_weightBold my_c1" style="font-family: 'Coda', cursive;">CHOOSE DIFFICULTY</div>
+				<div class="width_90prc margin_autoLF">
+					<input type="range" min="1" max="7" value="5" id="difficultyOption" onchange="sliderClick()" oninput="sliderClick()">
+				</div>
+				<div id="difficultyRange" class="width_88prc flex flex_row flex_justifyContentSpaceBetween"><y>1</y><y>2</y><y>3</y><y>4</y><y>5</y><y>6</y><y>7</y></div>
+				<div id="noteLevel">*click 'start' to restart the game with choosen difficulty.</div>
+			</div>
+		</aside>
+	</section>
+
+
+
+	<script type="text/javascript">
+		//onclick="pause()"
+		let field_element = document.getElementById('box_container');
+		let key = null;
+		let boost = null;
+		let overlapKey = null;
+		let stop = null;
+		let stopWatch = null;
+		let restart = 0;
+		let difficulty = 5;
+		let totalScore = 0;
+		let globalTimer = 0;
+		let highScoreRef = 0;
+		let active = false;
+		let pause = false;
+		let bonusScore = 10;
+
+		function keys(event)
+		{
+			let temp = event.code;
+			if(temp == 'KeyW' || temp == 'KeyA' || temp == 'KeyS' || temp == 'KeyD')
+				key = temp;
+		}
+		function fast(event)
+		{
+			let temp = event.code;
+			let altKeys = event.keyCode;
+			if(altKeys == 38)
+			{
+				key = 'KeyW';
+				temp = key;
+			}
+			else if(altKeys == 37)
+			{
+				key = 'KeyA';
+				temp = key;
+			}
+			else if(altKeys == 40)
+			{
+				key = 'KeyS';
+				temp = key;
+			}
+			else if(altKeys == 39)
+			{
+				key = 'KeyD';
+				temp = key;
+			}
+
+
+			if(temp == 'Space')
+			{
+				boost = temp;
+				overlapKey = false;
+			}
+			else if(temp == 'KeyW' || temp == 'KeyA' || temp == 'KeyS' || temp == 'KeyD')
+				overlapKey = true;
+			else
+				boost = '';
+		}
+		function slow(event)
+		{
+			let temp = event.code;
+			if(temp == 'Space')
+				boost = 'Slow';
+			else if(overlapKey == true && temp == 'Space')
+				boost = 'slow';
+			else
+				boost = '';
+		}
+		let new_foodElement = document.createElement('div');
+		let pauseElementButton = document.getElementById('pause');
+		function updatePauseButton()
+		{
+			if(active == false)
+				pauseElementButton.disabled = true;
+			else if(active == true)
+				pauseElementButton.disabled = false;
+		}
+		updatePauseButton();
+		let sliderLevelElement = document.getElementById('difficultyOption');
+		let sideNoteElement = document.getElementById('noteLevel');
+
+		//Testing
+		/*let new_Body = document.createElement('div');
+		new_Body.setAttribute("class","tile my_color1");
+		new_Body.setAttribute("id", "tail2");
+		field_element.appendChild(new_Body);*/
+		//-----------------------------------------------------------
+		let foodElement = null;
+		let speed = 0;
+		let snake = document.getElementById('snake');
+		let previousKey = '';
+		let posx = 0;
+		let posy = 0;
+		let foodx = 0;
+		let foody = 0;
+		let tail = [];
+		let snakeLength = 0;
+		class Trail
+		{
+  			constructor(x, y) 
+  			{
+    			this.x = x;
+    			this.y = y;
+  			}
+		}
+		//--------------------------------------------------------------
+		function go()
+		{
+		active = true;
+		updatePauseButton();
+		new_foodElement.setAttribute("class","tile my_color2");
+		new_foodElement.setAttribute("id", "food");
+		field_element.appendChild(new_foodElement);
+		foodElement = document.getElementById('food');
+
+		if(pause == true)
+			pauseState();
+		timer();
+		removeScreen();
+		setDifficulty();
+		clearInterval(stop);
+		stop =  setInterval(animate, speed);
+		for(let i = 1; i <= restart;  i++)
+		{
+			field_element.removeChild(field_element.childNodes[5]);
+			console.log(i);
+			console.log(field_element.childElementCount);
+		}
+		restart = 0;
+		key = null;
+		previousKey = '';
+		posx = 0;
+		posy = 0;
+		foodx = 0;
+		foody = 0;
+		snakeMove(0,0);
+		tail = [];
+		snakeLength = 0;
+		globalTimer = 0;
+		totalScore = 0;
+		score(false);
+		food();
+
+		}
+		//--------------------------------------------------------------
+		function animate()
+			{
+				ifEat();
+				Trails(snakeLength);
+				
+				if(snakeLength != 0)
+				{
+					if(key == 'KeyW' && previousKey == 'KeyS')
+					{
+						key = previousKey;
+						console.log('why');
+					}
+					else if(key == 'KeyS' && previousKey == 'KeyW')
+						key = previousKey;
+					else if(key == 'KeyA' && previousKey == 'KeyD')
+						key = previousKey;
+					else if(key == 'KeyD' && previousKey == 'KeyA')
+						key = previousKey;
+				}
+
+				if(key == 'KeyW')
+				{
+					posy+=20;
+					posy = posy % 700;
+					snakeMove(posx, posy);
+					previousKey = key;
+				}
+				else if(key == 'KeyS')
+				{
+					if(posy <= 0)
+					posy = 700;
+					posy-=20;
+					snakeMove(posx, posy);
+					previousKey = key;
+				}
+				else if(key == 'KeyD')
+				{
+					posx+=20;
+					posx = posx % 700;
+					snakeMove(posx, posy);
+					previousKey = key;
+				}
+				else if(key == 'KeyA')
+				{
+					if(posx <= 0)
+					posx = 700;
+					posx-=20;
+					snakeMove(posx, posy);
+					previousKey = key;
+				}
+				else
+				{
+					posx+=20;
+					posx = posx % 700;
+					snakeMove(posx, posy);
+					
+					previousKey = 'keyD';
+				}
+				
+
+				if(boost == 'Slow')
+				{
+					clearInterval(stop);
+					stop = setInterval(animate, speed);
+				}
+				else if(boost == 'Space')
+				{
+					clearInterval(stop);
+					stop = setInterval(animate, speed/2);
+				}
+
+				tailMove(snakeLength);
+				if(collision())
+				{
+					clearInterval(stop);
+					gameOver();
+					active = false;
+				}
+			}
+
+			function snakeMove(counterX, counterY)
+			{
+				snake.style.left = counterX + 'px';
+				snake.style.bottom = counterY + 'px';
+			}
+
+			function ifEat()
+			{
+				if(posx == foodx && posy == foody)
+				{
+					food();
+					++snakeLength;
+					let new_Body;
+					new_Body = document.createElement('div');
+					new_Body.setAttribute("class","tile my_color1");
+					new_Body.setAttribute("id", "tail" + snakeLength);
+					field_element.appendChild(new_Body);
+					++restart;
+					score(true);
+					globalTimer = 0;
+				}
+			}
+
+			function collision()
+			{
+				for(let i = 0; i < snakeLength; ++i)
+				{
+					snakeBody = new Trail(0, 0);
+					snakeBody = tail[i];
+					if(snakeBody.x == posx && snakeBody.y == posy)
+					{
+						return true;
+					}
+				}
+				return false;
+			}
+
+			function Trails(trailLength)
+			{	
+				if(trailLength > 0)
+				{
+					if(trailLength > 1)
+					{
+						for(let i = trailLength; i > 0; --i )
+						{
+							tail[i] = tail[i-1];
+						}
+					}
+					trailer = new Trail(posx, posy);
+					tail[0] = trailer;
+				}
+			}
+
+			function tailMove(length)
+			{
+				for(let tail_I = 0; tail_I < length; ++tail_I)
+				{
+					temp = new Trail(0, 0);
+					temp = tail[tail_I];
+					let tailEnd = document.getElementById('tail'+ (tail_I+1));
+					tailEnd.style.left = temp.x + 'px';
+					tailEnd.style.bottom = temp.y + 'px';
+				}
+			}
+
+			function food()
+			{
+				let unique = false
+				let foodX = 0;
+				let foodY = 0;
+				while(unique == false)
+				{
+					foodX = randomizer(700, 20);
+					foodY = randomizer(700, 20);
+					for(let i = 0; i < snakeLength; ++i)
+					{
+						trailer = tail[i];
+						if(trailer.x == foodX && trailer.y == foodY)
+						{
+							unique = false;
+							break;
+						}
+						else
+						{
+							unique = true;
+						}
+					}
+					if(posx == foodX && posy == foodY)
+					{
+						unique = false;
+					}
+					else
+					{
+						if(snakeLength == 0)
+						unique = true;
+					}
+				}
+
+				foodElement.style.left = foodX + 'px';
+				foodElement.style.bottom = foodY + 'px';
+				foodx = foodX;
+				foody = foodY;
+			}
+		//---------------------------------------------------------------
+
+		function randomizer(range, ratio)
+		{
+			let x = Math.random()
+			x *= range;
+			let dif = x % ratio;
+			x = x - dif;
+			return x;
+		}
+
+		function removeScreen()
+		{
+			let game_screen = document.getElementById('screen');
+			game_screen.style.backgroundColor = 'rgba(0,0,0,0)';
+			game_screen.removeAttribute('onclick');
+			game_screen.innerHTML = '';
+		}
+
+		function restartGame()
+		{
+			pauseElementButton.disabled = false;
+			go();
+		}
+
+		function gameOver()
+		{
+			let game_over = document.getElementById('screen');
+			game_over.style.transition = '1s';
+			game_over.style.backgroundColor = 'rgba(0,0,0,.4)';
+			game_over.style.fontFamily = '"Coda", cursive';
+			game_over.style.color = 'white';
+			game_over.style.fontSize = '2em';
+			game_over.setAttribute('onclick', 'restartGame()');
+			game_over.innerHTML = "GAME OVER";
+			let pauseElement = document.getElementById('pause');
+			pauseElementButton.disabled = true;
+
+		}
+		function pauseState()
+		{
+			let pauseElement = document.getElementById('pause');
+			if(pause == false)
+			{
+				clearInterval(stop);
+				clearInterval(stopWatch);
+				pauseScreen();
+				pause = true;
+				pauseElement.innerHTML = 'RESUME';
+				pauseElement.style.backgroundColor = 'rgba(148, 17, 17, 1)';
+				pauseElement.removeAttribute('onkeypress');
+				pauseElement.removeAttribute('onkeydown');
+				pauseElement.removeAttribute('onkeyup');
+			}
+			else if(pause == true)
+			{
+				stop = setInterval(animate, speed);
+				stopWatch = setInterval(zawardo, 10);
+				pause = false;
+				pauseElement.innerHTML = 'PAUSE';
+				pauseElement.style.backgroundColor = 'rgba(23, 66, 80, 1)';
+				removeScreen();
+				//onMouseDown="go()" onkeypress="keys(event)" onkeydown="fast(event)" onkeyup="slow(event)"
+				pauseElement.setAttribute('onkeypress', 'keys(event)');
+				pauseElement.setAttribute('onkeydown', 'fast(event)');
+				pauseElement.setAttribute('onkeyup', 'slow(event)');
+			}
+		}
+
+		function pauseScreen()
+		{
+			let game_over = document.getElementById('screen');
+			game_over.style.transition = '1s';
+			game_over.style.backgroundColor = 'rgba(0,0,0,.4)';
+			game_over.style.fontFamily = '"Coda", cursive';
+			game_over.style.color = 'white';
+			game_over.style.fontSize = '2em';
+			game_over.setAttribute('onclick', 'pauseState()');
+			game_over.innerHTML = "Pause";
+		}
+
+		//timer
+		let watch = null;
+		let timeElement = document.getElementById('totalTime');
+		function timer()
+		{
+			watch = 0;
+			timeElement.innerHTML = '00000';
+			clearInterval(stopWatch);
+			stopWatch = setInterval(zawardo, 10);
+		}
+		function zawardo()
+		{
+			watch+= 0.01;
+			let Characters = '';
+			let num = 100000 + watch;
+			Characters = num +'';
+			let newTime = '';
+			for(let i = 1; i<6; ++i)
+			{
+				newTime += Characters.charAt(i);
+			}
+			timeElement.innerHTML = newTime;
+			globalTimer+= 0.01;
+			if(active == false)
+			{
+				clearInterval(stopWatch);
+			}
+		}
+
+		function score(scored)
+		{
+			let scoreElement = document.getElementById('totalScore');
+			let Placeholder = 100000000;
+			Placeholder += totalScore;
+			if(scored == true)
+			{
+				if(globalTimer <= bonusScore)
+				{
+					totalScore += (difficulty*2);
+					Placeholder += (difficulty*2);
+				}
+				else
+				{
+					totalScore += difficulty;
+					Placeholder += difficulty;
+				}
+			}
+			let Characters = '' + Placeholder;
+			let insertScore = '';
+			for(let i = 1;  i < 9; ++i)
+			{
+				insertScore += Characters.charAt(i);
+			}	
+			scoreElement.innerHTML = insertScore;
+			highScore(totalScore);
+		}
+
+		function highScore(score)
+		{
+			let highScoreElement = document.getElementById('highScore');
+			let Placeholder = 100000000;
+			if(totalScore > highScoreRef)
+			{
+				highScoreRef = totalScore;
+			}
+			Placeholder += highScoreRef;
+			let Characters = '' + Placeholder;
+			let insertHScore = '';
+			for(let i = 1;  i < 9; ++i)
+			{
+				insertHScore += Characters.charAt(i);
+			}
+			highScoreElement.innerHTML = insertHScore;
+		}
+
+		function setDifficulty()
+		{
+			let level = sliderLevelElement.value;
+			if(level == 1)
+			{
+				speed = 600;
+				difficulty = 1;
+				bonusScore = 18;
+			}
+			else if(level == 2)
+			{
+				speed = 500;
+				difficulty = 2;
+				bonusScore = 16;
+			}
+			else if(level == 3)
+			{
+				speed = 400;
+				difficulty = 4;
+				bonusScore = 14;
+			}
+			else if(level == 4)
+			{
+				speed = 300;
+				difficulty = 12;
+
+			}
+			else if(level == 5)
+			{
+				speed = 200;
+				difficulty = 5;
+				bonusScore = 10;
+			}
+			else if(level == 6)
+			{
+				speed = 100;
+				difficulty = 7;
+				bonusScore = 8;
+			}
+			else if(level == 7)
+			{
+				speed = 50;
+				difficulty = 7;
+				bonusScore = 6;
+			}
+			sideNoteElement.style.visibility = 'hidden';
+		}
+
+		function sliderClick()
+		{
+			sideNoteElement.style.visibility = 'unset';
+		}
+	</script>
+</body>
+</html>
